@@ -1,6 +1,6 @@
-update:
-	python setup.py sdist upload --sign
-	sudo pip install pysec --upgrade
+upload:
+	make clean
+	python3 setup.py sdist bdist_wheel && twine upload dist/*
 
 test:
 	nosetests --with-coverage --cover-erase --cover-package pysec --logging-level=INFO --cover-html
@@ -19,4 +19,4 @@ countt:
 	cloc tests
 
 clean:
-	rm *.hdf5 *.yml *.csv
+	rm -f *.hdf5 *.yml *.csv
