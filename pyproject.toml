@@ -1,0 +1,22 @@
+[build-system]
+requires = ["flit_core >=3.2,<4"]
+build-backend = "flit_core.buildapi"
+
+[project]
+name = "pysec"
+version = "0.1.0"
+description = "FOSS Endpoint Security"
+authors = [{ name = "Martin Thoma", email = "info@martin-thoma.de" }]
+dependencies = [
+    "rich",
+    "requests",
+    "typer[all]",
+    "appdirs",
+]
+
+[project.scripts]
+pysec = "pysec.cli:main"
+
+
+[tool.flit.sdist]
+exclude = ["tests/", "*.pyc", "__pycache__"]
