@@ -1,39 +1,43 @@
-import os
-from appdirs import user_config_dir
-from collections import defaultdict
-import gzip
-import shutil
-import json
-import urllib.request
+"""Fetch and parse CVE data from NVD."""
 
+import gzip
+import json
+import shutil
+import urllib.request
+from collections import defaultdict
+from pathlib import Path
+
+from appdirs import user_config_dir
+
+CPE_LEN = 4
 
 class CveManager:
-    def __init__(self):
+    def __init__(self) -> None:
+        """Initialize the CVE manager."""
         self.config_dir = user_config_dir("pysec")
-        os.makedirs(self.config_dir, exist_ok=True)
+        Path(self.config_dir).mkdir(parents=True)
         self.years = [2023, 2024, 2025]
         self.cve_data = defaultdict(list)
         self._load_or_download()
 
-    def _load_or_download(self):
+    def _load_or_download(self) -> None:
+        config_path = Path(self.config_dir)
         for year in self.years:
-            path = os.path.join(self.config_dir, f"nvdcve-1.1-{year}.json")
-            if not os.path.exists(path):
+            path = config_path / f"nvdcve-1.1-{year}.json"
+            if not path.exists():
                 self._download(year)
             self._parse(path)
 
-    def _download(self, year):
+    def _download(self, year: int) -> None:
         url = f"https://nvd.nist.gov/feeds/json/cve/1.1/nvdcve-1.1-{year}.json.gz"
-        gz_path = os.path.join(self.config_dir, f"nvdcve-1.1-{year}.json.gz")
-        print(f"Downloading {url}")
-        urllib.request.urlretrieve(url, gz_path)
-        with gzip.open(gz_path, 'rb') as f_in:
-            with open(gz_path[:-3], 'wb') as f_out:
+        gz_path = Path(self.config_dir) / f"nvdcve-1.1-{year}.json.gz"
+        urllib.request.urlretrieve(url, gz_path)  # noqa: S310
+        with gzip.open(gz_path, "rb") as f_in, open(gz_path[:-3], "wb") as f_out:  # noqa: PTH123
                 shutil.copyfileobj(f_in, f_out)
-        os.remove(gz_path)
+        Path(gz_path).unlink()
 
-    def _parse(self, path):
-        with open(path) as f:
+    def _parse(self, path: Path) -> None:
+        with path.open() as f:
             data = json.load(f)
         for item in data.get("CVE_Items", []):
             cve_id = item["cve"]["CVE_data_meta"]["ID"]
@@ -42,10 +46,10 @@ class CveManager:
                 for cpe in node.get("cpe_match", []):
                     if cpe.get("vulnerable"):
                         cpe_parts = cpe.get("cpe23Uri", "").split(":")
-                        if len(cpe_parts) > 4:
-                            pkg = cpe_parts[4].lower()
+                        if len(cpe_parts) > CPE_LEN:
+                            pkg = cpe_parts[CPE_LEN].lower()
                             self.cve_data[pkg].append((cve_id, desc))
 
     def get_cves(self, pkg: str) -> list:
-        name = pkg.lower().split('-')[0]  # Basic heuristic
+        name = pkg.lower().split("-")[0]  # Basic heuristic
         return self.cve_data.get(pkg.lower(), []) + self.cve_data.get(name, [])

@@ -1,12 +1,13 @@
 import importlib
 import os
 import pkgutil
+
 from pysec.osbase import BaseSecurityChecker
 
 
 def _find_checker_class() -> type[BaseSecurityChecker] | None:
     """Search for a checker class matching the current OS."""
-    package_path = os.path.dirname(__file__)
+    package_path = os.path.dirname(__file__)  # noqa: PTH120
     for _, module_name, _ in pkgutil.iter_modules([package_path]):
         full_module_name = f"{__name__}.{module_name}"
         try:
@@ -20,9 +21,8 @@ def _find_checker_class() -> type[BaseSecurityChecker] | None:
                 isinstance(attr, type)
                 and issubclass(attr, BaseSecurityChecker)
                 and attr is not BaseSecurityChecker
-            ):
-                if attr.is_current_os():
-                    return attr
+            ) and attr.is_current_os():
+                return attr
     return None
 
 

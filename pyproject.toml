@@ -20,3 +20,24 @@ pysec = "pysec.cli:main"
 
 [tool.flit.sdist]
 exclude = ["tests/", "*.pyc", "__pycache__"]
+
+
+[tool.ruff.lint]
+select = ["ALL"]
+ignore = [
+    "A004",  # Import `print` is shadowing a Python builtin
+    "BLE001",  # Do not catch blind exception: `Exception`
+    "D101", #  Missing docstring in public class
+    "D102",  # Missing docstring in public method
+    "D104", #  Missing docstring in public package
+    "D203",  # `incorrect-blank-line-before-class`
+    "D212",    # I want multiline-docstrings to start at the second line
+    "FA102",  # Missing `from __future__ import annotations`, but uses PEP 604 union
+    "PERF203", # `try`-`except` within a loop incurs performance overhead
+    "PLW2901",  # `for` loop variable `line` overwritten by assignment target
+    "S110",  # `try`-`except`-`pass` detected, consider logging the exception
+    "S112", # `try`-`except`-`continue` detected, consider logging the exception
+    "S603",  # `subprocess` call: check for execution of untrusted input
+    "S607",  # Starting a process with a partial executable path
+
+]

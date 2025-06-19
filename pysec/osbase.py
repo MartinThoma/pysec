@@ -1,31 +1,32 @@
+"""Base class for OS-specific security auditing implementations."""
+
 from abc import ABC, abstractmethod
 
 
 class BaseSecurityChecker(ABC):
-    """
-    Abstract base class for OS-specific security auditing implementations.
-    """
+    """Abstract base class for OS-specific security auditing implementations."""
 
     @abstractmethod
     def get_installed_packages(self) -> list[dict[str, str]]:
         """
         Return a list of installed packages with their versions.
-        Example: [{ "name": "openssl", "version": "1.1.1" }, ...]
+
+        Example: [{ "name": "openssl", "version": "1.1.1" }, ...].
         """
-        pass
 
     @abstractmethod
     def is_disk_encrypted(self) -> bool:
-        """
-        Return True if the system disk is encrypted, False otherwise.
-        """
-        pass
+        """Return if the system disk is encrypted."""
 
     @abstractmethod
     def screen_lock_timeout_minutes(self) -> int | None:
         """
         Return the screen lock timeout in minutes.
+
         - Return None if screen locking is disabled.
         - Return a positive integer if locking is enabled.
         """
-        pass
+
+    @abstractmethod
+    def automatic_daily_updates_enabled(self) -> bool:
+        """Return if automatic daily updates are enabled."""

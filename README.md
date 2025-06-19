@@ -21,6 +21,18 @@ git clone https://github.com/MartinThoma/pysec.git
 pipx install -e .
 ```
 
+### Examples
+
+```
+$ pysec audit config
+Running system configuration audit...
+- Found checker: UbuntuSecurityChecker
+- Installed packages: 3865
+✗ Disk is NOT encrypted
+✓ Screen locks after 15 minutes
+✓ Automatic daily updates are enabled
+```
+
 
 ## Supported platforms
 

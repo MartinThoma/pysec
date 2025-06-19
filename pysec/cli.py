@@ -1,3 +1,9 @@
+"""
+CLI for pysec.
+
+The relevant commands are in subcommands which are in submodules.
+"""
+
 import typer
 from rich import print
 
@@ -11,18 +17,19 @@ app.add_typer(audit_app, name="audit")
 
 
 @audit_app.command("config")
-def audit_config():
+def audit_config() -> None:
     """Check the security configuration of the system."""
     print("[bold cyan]Running system configuration audit...[/bold cyan]")
     check_config()
 
 
 @audit_app.command("packages")
-def audit_packages():
+def audit_packages() -> None:
     """Check installed packages for known CVEs."""
     print("[bold cyan]Auditing installed packages...[/bold cyan]")
     audit_installed_packages()
 
 
-def main():
+def main() -> None:
+    """Connect subcommands here."""
     app()

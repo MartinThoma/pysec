@@ -1,12 +1,18 @@
-from pysec.oschecks import get_checker
-from rich import print
+"""CLI script to audit system configuration for security best practices."""
+
 import platform
 
+from rich import print
 
-def check_config():
+from pysec.oschecks import get_checker
+
+
+def check_config() -> None:
+    """Check the security configuration of the system."""
     checker = get_checker()
     if not checker:
-        print(f"[red]✗ No supported OS checker found: {platform.platform().lower()}[/red]")
+        platform_name = platform.platform().lower()
+        print(f"[red]✗ No supported OS checker found: {platform_name}[/red]")
         return
 
     print(f"- Found checker: {checker.__class__.__name__}")
@@ -23,3 +29,8 @@ def check_config():
         print("[red]✗ Screen lock is disabled[/red]")
     else:
         print(f"[green]✓ Screen locks after {timeout} minutes[/green]")
+
+    if checker.automatic_daily_updates_enabled():
+        print("[green]✓ Automatic daily updates are enabled[/green]")
+    else:
+        print("[red]✗ Automatic daily updates are NOT enabled[/red]")
