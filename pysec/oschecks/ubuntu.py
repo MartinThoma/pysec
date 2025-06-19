@@ -1,6 +1,5 @@
 import subprocess
 from pysec.osbase import BaseSecurityChecker
-from typing import List, Dict, Optional
 
 class UbuntuSecurityChecker(BaseSecurityChecker):
     @staticmethod
@@ -15,7 +14,7 @@ class UbuntuSecurityChecker(BaseSecurityChecker):
             pass
         return False
 
-    def get_installed_packages(self) -> List[Dict[str, str]]:
+    def get_installed_packages(self) -> list[dict[str, str]]:
         result = subprocess.run(
             ["dpkg-query", "-W", "-f=${Package}\t${Version}\n"],
             capture_output=True, text=True, check=True
@@ -35,7 +34,7 @@ class UbuntuSecurityChecker(BaseSecurityChecker):
         except Exception:
             return False
 
-    def screen_lock_timeout_minutes(self) -> Optional[int]:
+    def screen_lock_timeout_minutes(self) -> int | None:
         import subprocess
 
         # Try GNOME first (seconds)
@@ -80,4 +79,3 @@ class UbuntuSecurityChecker(BaseSecurityChecker):
             pass
 
         return None
-

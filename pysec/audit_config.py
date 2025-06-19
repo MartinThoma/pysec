@@ -10,9 +10,9 @@ def check_config():
         return
 
     print(f"- Found checker: {checker.__class__.__name__}")
-    
+
     print("- Installed packages:", len(checker.get_installed_packages()))
-    
+
     if checker.is_disk_encrypted():
         print("[green]✓ Disk is encrypted[/green]")
     else:

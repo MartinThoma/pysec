@@ -1,11 +1,10 @@
 import importlib
 import os
 import pkgutil
-from typing import Optional, Type
 from pysec.osbase import BaseSecurityChecker
 
 
-def _find_checker_class() -> Optional[Type[BaseSecurityChecker]]:
+def _find_checker_class() -> type[BaseSecurityChecker] | None:
     """Search for a checker class matching the current OS."""
     package_path = os.path.dirname(__file__)
     for _, module_name, _ in pkgutil.iter_modules([package_path]):
@@ -27,7 +26,7 @@ def _find_checker_class() -> Optional[Type[BaseSecurityChecker]]:
     return None
 
 
-def get_checker() -> Optional[BaseSecurityChecker]:
+def get_checker() -> BaseSecurityChecker | None:
     """Return an instance of the appropriate security checker."""
     checker_cls = _find_checker_class()
     return checker_cls() if checker_cls else None

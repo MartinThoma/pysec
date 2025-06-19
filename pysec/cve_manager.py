@@ -1,4 +1,3 @@
-
 import os
 from appdirs import user_config_dir
 from collections import defaultdict

@@ -1,6 +1,10 @@
 # pysec
 
-FOSS endpoint security.
+FOSS endpoint security application.
+
+Originally, the idea was to give you some chance to get your notebook back if it
+was stolen ([original project](https://github.com/MartinThoma/pysec-notebook)).
+Now, the goal is a bit broader: It should help you to keep your system secure.
 
 pysec offers the following components:
 
@@ -9,6 +13,8 @@ pysec offers the following components:
 
 
 ## Try it out!
+
+You might need to install [`pipx`](https://pypi.org/project/pipx/) first:
 
 ```
 git clone https://github.com/MartinThoma/pysec.git

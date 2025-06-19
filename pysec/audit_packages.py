@@ -14,7 +14,7 @@ def audit_installed_packages():
     if not installed_packages:
         print("[yellow]No packages found.[/yellow]")
         return
-    
+
     cve_manager = CveManager()
 
     results = []

@@ -1,5 +1,4 @@
 from abc import ABC, abstractmethod
-from typing import List, Dict, Optional
 
 
 class BaseSecurityChecker(ABC):
@@ -8,7 +7,7 @@ class BaseSecurityChecker(ABC):
     """
 
     @abstractmethod
-    def get_installed_packages(self) -> List[Dict[str, str]]:
+    def get_installed_packages(self) -> list[dict[str, str]]:
         """
         Return a list of installed packages with their versions.
         Example: [{ "name": "openssl", "version": "1.1.1" }, ...]
@@ -23,7 +22,7 @@ class BaseSecurityChecker(ABC):
         pass
 
     @abstractmethod
-    def screen_lock_timeout_minutes(self) -> Optional[int]:
+    def screen_lock_timeout_minutes(self) -> int | None:
         """
         Return the screen lock timeout in minutes.
         - Return None if screen locking is disabled.
