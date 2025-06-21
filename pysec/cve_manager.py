@@ -18,7 +18,7 @@ class CveManager:
         if not self.config_dir.exists():
             self.config_dir.mkdir(parents=True)
         self.years = [2023, 2024, 2025]
-        self.cve_data = defaultdict(list)
+        self.cve_data: dict[str, list[tuple[str, str]]] = defaultdict(list)
         self._load_or_download()
 
     def _load_or_download(self) -> None:
@@ -32,7 +32,7 @@ class CveManager:
         url = f"https://nvd.nist.gov/feeds/json/cve/1.1/nvdcve-1.1-{year}.json.gz"
         gz_path = Path(self.config_dir) / f"nvdcve-1.1-{year}.json.gz"
         urllib.request.urlretrieve(url, gz_path)  # noqa: S310
-        with gzip.open(gz_path, "rb") as f_in, open(gz_path[:-3], "wb") as f_out:  # noqa: PTH123
+        with gzip.open(gz_path, "rb") as f_in, open(str(gz_path)[:-3], "wb") as f_out:  # noqa: PTH123
                 shutil.copyfileobj(f_in, f_out)
         Path(gz_path).unlink()
 

@@ -28,11 +28,11 @@ repos:
     rev: v3.19.1
     hooks:
     -   id: pyupgrade
-        args: [--py310-plus]
+        args: [--py311-plus]
 
 -   repo: https://github.com/pre-commit/mirrors-mypy
     rev: 'v1.16.0'
     hooks:
       - id: mypy
-        additional_dependencies: [types-Pillow==10.2.0.20240822]
-        files: ^pypdf/.*
+        additional_dependencies: ["types-requests"]
+        files: ^pysec/.*

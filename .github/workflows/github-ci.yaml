@@ -27,117 +27,46 @@ jobs:
       uses: actions/checkout@v4
       with:
         submodules: 'recursive'
-    - name: Setup Python (3.11+)
+    - name: Setup Python
       uses: actions/setup-python@v5
       with:
         python-version: 3.13  # latest stable python
         allow-prereleases: true
-    - name: Upgrade pip
+    - name: Install uv
+      run: python -m pip install --upgrade uv
+    - name: Setup venv
       run: |
-        python -m pip install --upgrade pip
-    - name: Install requirements (Python 3.11+)
-      run: |
-        pip install -r requirements/ci-3.11.txt
-    - name: Install cryptography
-      run: |
-        pip install cryptography
-    - name: Install pypdf
-      run: |
-        pip install .
-    - name: Prepare
-      run: |
-        python -c "from tests import download_test_pdfs; download_test_pdfs()"
+        uv venv
+        echo "$GITHUB_WORKSPACE/.venv/bin" >> $GITHUB_PATH
+        uv pip install .[dev]
     - name: Test with pytest
       run: |
-        python -m pytest tests --cov=pypdf --cov-append -n auto -vv -p no:benchmark
+        .venv\Scripts\python.exe -m pytest tests --cov=pysec --cov-append -vv
 
 
   tests:
-    name: "pytest on ${{ matrix.python-version }} (crypto-lib: ${{ matrix.use-crypto-lib }})"
+    name: "pytest on ${{ matrix.python-version }}"
     runs-on: ubuntu-22.04
     strategy:
       matrix:
-        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12", "3.13"]
-        use-crypto-lib: ["cryptography"]
-        include:
-          - python-version: "3.8"
-            use-crypto-lib: "pycryptodome"
-          - python-version: "3.8"
-            use-crypto-lib: "none"
+        python-version: ["3.11", "3.12", "3.13"]
     steps:
-    - name: Update APT packages
-      run:
-        sudo apt-get update
-    - name: Install APT dependencies
-      run:
-        sudo apt-get install ghostscript jbig2dec poppler-utils
     - name: Checkout Code
       uses: actions/checkout@v4
       with:
         submodules: 'recursive'
-    - name: Cache Downloaded Files
-      id: cache-downloaded-files
-      uses: actions/cache@v4
-      with:
-        path: '**/tests/pdf_cache/*'
-        key: cache-downloaded-files
     - name: Setup Python
       uses: actions/setup-python@v5
-      if: matrix.python-version == '3.8' || matrix.python-version == '3.9' || matrix.python-version == '3.10'
-      with:
-        python-version: ${{ matrix.python-version }}
-        cache: 'pip'
-        cache-dependency-path: '**/requirements/ci.txt'
-    - name: Setup Python (3.11+)
-      uses: actions/setup-python@v5
-      if: matrix.python-version == '3.11' || matrix.python-version == '3.12' || matrix.python-version == '3.13'
-      with:
-        python-version: ${{ matrix.python-version }}
-        allow-prereleases: true
-        cache: 'pip'
-        cache-dependency-path: '**/requirements/ci-3.11.txt'
-    - name: Upgrade pip
+    - name: Install uv
+      run: python -m pip install --upgrade uv
+    - name: Setup venv
       run: |
-        python -m pip install --upgrade pip
-    - name: Install requirements (Python 3)
-      run: |
-        pip install -r requirements/ci.txt
-      if: matrix.python-version == '3.8' || matrix.python-version == '3.9' || matrix.python-version == '3.10'
-    - name: Install requirements (Python 3.11+)
-      run: |
-        pip install -r requirements/ci-3.11.txt
-      if: matrix.python-version == '3.11' || matrix.python-version == '3.12' || matrix.python-version == '3.13'
-    - name: Remove pycryptodome and cryptography
-      run: |
-        pip uninstall pycryptodome cryptography -y
-    - name: Install cryptography
-      run: |
-        pip install cryptography
-      if: matrix.use-crypto-lib == 'cryptography'
-    - name: Install pycryptodome
-      run: |
-        pip install pycryptodome
-      if: matrix.use-crypto-lib == 'pycryptodome'
-    - name: Install pypdf
-      run: |
-        pip install .
-    - name: Download test files
-      run: |
-        python -c "from tests import download_test_pdfs; download_test_pdfs()"
-    - name: Setup sitecustomize.py for coverage
-      run: |
-        SITE_PACKAGES="$(python -m site --user-site)"
-        SITECUSTOMIZE_PATH="$SITE_PACKAGES/sitecustomize.py"
-        mkdir -p $SITE_PACKAGES
-        touch $SITECUSTOMIZE_PATH
-        echo "try:" >> $SITECUSTOMIZE_PATH
-        echo "    import coverage" >> $SITECUSTOMIZE_PATH
-        echo "    coverage.process_startup()" >> $SITECUSTOMIZE_PATH
-        echo "except ImportError:" >> $SITECUSTOMIZE_PATH
-        echo "    pass" >> $SITECUSTOMIZE_PATH
+        uv venv
+        echo "$GITHUB_WORKSPACE/.venv/bin" >> $GITHUB_PATH
+        uv pip install .[dev]
     - name: Test with pytest
       run: |
-        python -m pytest tests --cov=pypdf --cov-append -n auto -vv -p no:benchmark
+        python -m pytest tests --cov=pysec --cov-append -vv
       env:
         COVERAGE_PROCESS_START: 'pyproject.toml'
     - name: Rename coverage data file
@@ -158,36 +87,23 @@ jobs:
       uses: actions/checkout@v4
       with:
         submodules: 'recursive'
-    - name: Setup Python 3.11
+    - name: Setup Python
       uses: actions/setup-python@v5
-      with:
-        python-version: "3.11"
-        cache: 'pip'
-        cache-dependency-path: '**/requirements/ci-3.11.txt'
-    - name: Upgrade pip
+    - name: Install uv
+      run: python -m pip install --upgrade uv
+    - name: Setup venv
       run: |
-        python -m pip install --upgrade pip
-    - name: Install requirements
-      run: |
-        pip install -r requirements/ci-3.11.txt
-    - name: Install pypdf
-      run: |
-        pip install .
+        uv venv
+        echo "$GITHUB_WORKSPACE/.venv/bin" >> $GITHUB_PATH
+        uv pip install .[dev]
     - name: Test with ruff
       run: |
         echo `ruff --version`
         ruff check .
     - name: Test with mypy
-      run : |
-        mypy pypdf
-    - name: Test docs build
-      run: |
-        pip install -r requirements/docs.txt
-        sphinx-build --nitpicky --fail-on-warning --keep-going --show-traceback --builder html docs build/sphinx/html
+      run : mypy pysec
     - name: Check with pre-commit
-      run: |
-        pip install -r requirements/dev.txt
-        pre-commit run --all-files --show-diff-on-failure
+      run: pre-commit run --all-files --show-diff-on-failure
 
   package:
     name: Build & verify package
@@ -209,7 +125,7 @@ jobs:
 
       - name: Test running installed package
         working-directory: /tmp
-        run: python -c "import pypdf;print(pypdf.__version__)"
+        run: python -c "import pysec;print(pysec.__version__)"
 
   coverage:
     name: Combine & check coverage.
