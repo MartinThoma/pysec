@@ -21,7 +21,7 @@ def _find_checker_class() -> type[BaseSecurityChecker] | None:
                 isinstance(attr, type)
                 and issubclass(attr, BaseSecurityChecker)
                 and attr is not BaseSecurityChecker
-            ) and attr.is_current_os():
+            ) and attr.is_current_os():  # type: ignore[call-arg]
                 return attr
     return None
 

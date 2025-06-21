@@ -1,0 +1,157 @@
+# This workflow will install Python dependencies, run tests and lint with a variety of Python versions
+# For more information see: https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
+
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - '**/*.md'
+      - '**/*.rst'
+  pull_request:
+    branches:
+      - main
+    paths-ignore:
+      - '**/*.md'
+      - '**/*.rst'
+  workflow_dispatch:
+
+jobs:
+  test_windows:
+    name: pytest on windows
+    runs-on: windows-latest
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+      with:
+        submodules: 'recursive'
+    - name: Setup Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: 3.13  # latest stable python
+        allow-prereleases: true
+    - name: Install uv
+      run: python -m pip install --upgrade uv
+    - name: Setup venv
+      run: |
+        uv venv
+        echo "$GITHUB_WORKSPACE/.venv/bin" >> $GITHUB_PATH
+        uv pip install .[dev]
+    - name: Test with pytest
+      run: |
+        .venv\Scripts\python.exe -m pytest tests --cov=pysec --cov-append -vv
+
+
+  tests:
+    name: "pytest on ${{ matrix.python-version }}"
+    runs-on: ubuntu-22.04
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.12", "3.13"]
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+      with:
+        submodules: 'recursive'
+    - name: Setup Python
+      uses: actions/setup-python@v5
+    - name: Install uv
+      run: python -m pip install --upgrade uv
+    - name: Setup venv
+      run: |
+        uv venv
+        echo "$GITHUB_WORKSPACE/.venv/bin" >> $GITHUB_PATH
+        uv pip install .[dev]
+    - name: Test with pytest
+      run: |
+        python -m pytest tests --cov=pysec --cov-append -vv
+      env:
+        COVERAGE_PROCESS_START: 'pyproject.toml'
+    - name: Rename coverage data file
+      run: mv .coverage ".coverage.$RANDOM"
+    - name: Upload coverage data
+      uses: actions/upload-artifact@v4
+      with:
+        name: coverage-data.${{ matrix.python-version }}-${{ matrix.use-crypto-lib }}
+        path: .coverage.*
+        if-no-files-found: ignore
+        include-hidden-files: true
+
+  codestyle:
+    name: Check code style issues
+    runs-on: ubuntu-22.04
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+      with:
+        submodules: 'recursive'
+    - name: Setup Python
+      uses: actions/setup-python@v5
+    - name: Install uv
+      run: python -m pip install --upgrade uv
+    - name: Setup venv
+      run: |
+        uv venv
+        echo "$GITHUB_WORKSPACE/.venv/bin" >> $GITHUB_PATH
+        uv pip install .[dev]
+    - name: Test with ruff
+      run: |
+        echo `ruff --version`
+        ruff check .
+    - name: Test with mypy
+      run : mypy pysec
+    - name: Check with pre-commit
+      run: pre-commit run --all-files --show-diff-on-failure
+
+  package:
+    name: Build & verify package
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_LATEST }}
+
+      - run: python -m pip install flit check-wheel-contents
+      - run: flit build
+      - run: ls -l dist
+      - run: check-wheel-contents dist/*.whl
+
+      - name: Test installing package
+        run: python -m pip install .
+
+      - name: Test running installed package
+        working-directory: /tmp
+        run: python -c "import pysec;print(pysec.__version__)"
+
+  coverage:
+    name: Combine & check coverage.
+    runs-on: ubuntu-latest
+    needs: tests
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          # Use latest Python, so it understands all syntax.
+          python-version: ${{ env.PYTHON_LATEST }}
+
+      - run: python -m pip install --upgrade coverage[toml]
+
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: coverage-data*
+          merge-multiple: true
+
+      - name: Combine coverage & create xml report
+        run: |
+          python -m coverage combine
+          python -m coverage xml
+      - name: Upload Coverage to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./coverage.xml

@@ -14,13 +14,18 @@ dependencies = [
     "appdirs",
 ]
 
+[project.optional-dependencies]
+dev = ["pytest", "ruff", "pre-commit", "mypy", "pytest-coverage", "types-requests"]
+
+
 [project.scripts]
 pysec = "pysec.cli:main"
-
 
 [tool.flit.sdist]
 exclude = ["tests/", "*.pyc", "__pycache__"]
 
+[tool.mypy]
+ignore_missing_imports = true
 
 [tool.ruff.lint]
 select = ["ALL"]
@@ -41,3 +46,10 @@ ignore = [
     "S607",  # Starting a process with a partial executable path
 
 ]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = [
+    "INP001",
+    "D103", # Missing docstring in public function
+    "S101",  # Use of `assert` detected
+    ]

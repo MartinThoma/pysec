@@ -7,6 +7,10 @@ class BaseSecurityChecker(ABC):
     """Abstract base class for OS-specific security auditing implementations."""
 
     @abstractmethod
+    def is_current_os(self) -> bool:
+        """Check if the current OS matches the implementation."""
+
+    @abstractmethod
     def get_installed_packages(self) -> list[dict[str, str]]:
         """
         Return a list of installed packages with their versions.
