@@ -14,16 +14,16 @@ CPE_LEN = 4
 class CveManager:
     def __init__(self) -> None:
         """Initialize the CVE manager."""
-        self.config_dir = user_config_dir("pysec")
-        Path(self.config_dir).mkdir(parents=True)
+        self.config_dir = Path(user_config_dir("pysec"))
+        if not self.config_dir.exists():
+            self.config_dir.mkdir(parents=True)
         self.years = [2023, 2024, 2025]
         self.cve_data = defaultdict(list)
         self._load_or_download()
 
     def _load_or_download(self) -> None:
-        config_path = Path(self.config_dir)
         for year in self.years:
-            path = config_path / f"nvdcve-1.1-{year}.json"
+            path = self.config_dir / f"nvdcve-1.1-{year}.json"
             if not path.exists():
                 self._download(year)
             self._parse(path)
