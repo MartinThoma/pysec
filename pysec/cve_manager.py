@@ -11,6 +11,7 @@ from appdirs import user_config_dir
 
 CPE_LEN = 4
 
+
 class CveManager:
     def __init__(self) -> None:
         """Initialize the CVE manager."""
@@ -32,8 +33,11 @@ class CveManager:
         url = f"https://nvd.nist.gov/feeds/json/cve/1.1/nvdcve-1.1-{year}.json.gz"
         gz_path = Path(self.config_dir) / f"nvdcve-1.1-{year}.json.gz"
         urllib.request.urlretrieve(url, gz_path)  # noqa: S310
-        with gzip.open(gz_path, "rb") as f_in, open(str(gz_path)[:-3], "wb") as f_out:  # noqa: PTH123
-                shutil.copyfileobj(f_in, f_out)
+        with (
+            gzip.open(gz_path, "rb") as f_in,
+            open(str(gz_path)[:-3], "wb") as f_out,  # noqa: PTH123
+        ):
+            shutil.copyfileobj(f_in, f_out)
         Path(gz_path).unlink()
 
     def _parse(self, path: Path) -> None:
