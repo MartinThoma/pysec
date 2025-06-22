@@ -21,7 +21,9 @@ class UbuntuSecurityChecker(BaseSecurityChecker):
     def get_installed_packages(self) -> list[dict[str, str]]:
         result = subprocess.run(
             ["dpkg-query", "-W", "-f=${Package}\t${Version}\n"],
-            capture_output=True, text=True, check=True,
+            capture_output=True,
+            text=True,
+            check=True,
         )
         packages = []
         for line in result.stdout.strip().splitlines():
@@ -42,8 +44,15 @@ class UbuntuSecurityChecker(BaseSecurityChecker):
         # Try GNOME first (seconds)
         try:
             result = subprocess.run(
-                ["gsettings", "get", "org.gnome.desktop.session", "idle-delay"],
-                capture_output=True, text=True, check=True,
+                [
+                    "gsettings",
+                    "get",
+                    "org.gnome.desktop.session",
+                    "idle-delay",
+                ],
+                capture_output=True,
+                text=True,
+                check=True,
             )
             seconds = int(result.stdout.strip())
             if seconds > 0:
@@ -55,8 +64,15 @@ class UbuntuSecurityChecker(BaseSecurityChecker):
         try:
             # Check if screen lock is enabled
             enabled_result = subprocess.run(
-                ["gsettings", "get", "org.mate.screensaver", "idle-activation-enabled"],
-                capture_output=True, text=True, check=True,
+                [
+                    "gsettings",
+                    "get",
+                    "org.mate.screensaver",
+                    "idle-activation-enabled",
+                ],
+                capture_output=True,
+                text=True,
+                check=True,
             )
             if enabled_result.stdout.strip() != "true":
                 return None
@@ -69,7 +85,9 @@ class UbuntuSecurityChecker(BaseSecurityChecker):
                 try:
                     result = subprocess.run(
                         ["gsettings", "get", *key.split()],
-                        capture_output=True, text=True, check=True,
+                        capture_output=True,
+                        text=True,
+                        check=True,
                     )
                     minutes = int(result.stdout.strip())
                     if minutes > 0:
@@ -103,5 +121,7 @@ class UbuntuSecurityChecker(BaseSecurityChecker):
                         value = line.split('"')[1]
                         enabled[key] = value
 
-        return enabled["APT::Periodic::Update-Package-Lists"] != "0" and \
-            enabled["APT::Periodic::Unattended-Upgrade"] != "0"
+        return (
+            enabled["APT::Periodic::Update-Package-Lists"] != "0"
+            and enabled["APT::Periodic::Unattended-Upgrade"] != "0"
+        )

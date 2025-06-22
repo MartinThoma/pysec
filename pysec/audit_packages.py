@@ -28,7 +28,6 @@ def audit_installed_packages() -> None:
         cves = cve_manager.get_cves(pkg_name)
         results.append((pkg_name, version, cves))
 
-
     table = Table(title="Installed Packages with CVEs")
     table.add_column("Package")
     table.add_column("Version")
@@ -37,7 +36,9 @@ def audit_installed_packages() -> None:
     # Placeholder: just print out package list with no CVE data
     for pkg in sorted(results, key=lambda x: x[0]):
         if pkg[2]:
-            cve_str = ",".join([f"{cve_desc[0]}: {cve_desc[1]}" for cve_desc in pkg[2]])
+            cve_str = ",".join(
+                [f"{cve_desc[0]}: {cve_desc[1]}" for cve_desc in pkg[2]],
+            )
             table.add_row(pkg[0], pkg[1], cve_str)
 
     print(table)
