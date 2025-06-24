@@ -7,6 +7,7 @@ The relevant commands are in subcommands which are in submodules.
 import typer
 from rich import print
 
+from pysec import SeverityLevel
 from pysec.audit_config import check_config
 from pysec.audit_packages import audit_installed_packages
 
@@ -24,10 +25,23 @@ def audit_config() -> None:
 
 
 @audit_app.command("packages")
-def audit_packages() -> None:
+def audit_packages(
+    verbosity: int = typer.Option(
+        0,
+        "--verbose",
+        "-v",
+        count=True,
+        help="Increase verbosity (-v, -vv for more output)",
+    ),
+    min_severity: SeverityLevel = typer.Option(
+        SeverityLevel.LOW,
+        "--min-severity",
+        help="Minimum CVE severity to report (LOW, MEDIUM, HIGH, CRITICAL)",
+    ),
+) -> None:
     """Check installed packages for known CVEs."""
     print("[bold cyan]Auditing installed packages...[/bold cyan]")
-    audit_installed_packages()
+    audit_installed_packages(verbosity=verbosity, min_severity=min_severity)
 
 
 def main() -> None:
