@@ -24,7 +24,8 @@ class ArchLinuxSecurityChecker(BaseSecurityChecker):
         # Check lsblk for devices using crypt
         try:
             output = subprocess.check_output(
-                ["lsblk", "-o", "TYPE,NAME,MOUNTPOINT"], text=True,
+                ["lsblk", "-o", "TYPE,NAME,MOUNTPOINT"],
+                text=True,
             )
             for line in output.strip().split("\n"):
                 if line.startswith("crypt"):
@@ -35,7 +36,6 @@ class ArchLinuxSecurityChecker(BaseSecurityChecker):
         # Fallback: check if /etc/crypttab exists and is non-empty
         crypttab = Path("/etc/crypttab")
         return bool(crypttab.exists() and crypttab.read_text().strip())
-
 
     def screen_lock_timeout_minutes(self) -> int | None:
         # Try checking xautolock (common with i3)
@@ -66,7 +66,8 @@ class ArchLinuxSecurityChecker(BaseSecurityChecker):
         # Look for systemd timer that runs `pacman -Syu` or similar
         try:
             timers_output = subprocess.check_output(
-                ["systemctl", "list-timers", "--all"], text=True,
+                ["systemctl", "list-timers", "--all"],
+                text=True,
             )
             for line in timers_output.splitlines():
                 if "pacman" in line or "update" in line:

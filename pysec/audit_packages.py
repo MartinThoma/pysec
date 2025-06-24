@@ -46,7 +46,7 @@ def audit_installed_packages(verbosity: int, min_severity: SeverityLevel) -> Non
     results = []
     for pkg_dict in installed_packages:
         pkg_name, version = pkg_dict["name"], pkg_dict["version"]
-        cves = cve_manager.get_cves(pkg_name)
+        cves = cve_manager.get_cves(pkg_name, version)
         cves = [
             (cve_desc[0], cve_desc[1], cve_desc[2])
             for cve_desc in cves

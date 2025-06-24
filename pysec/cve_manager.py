@@ -19,7 +19,9 @@ class CveManager:
         if not self.config_dir.exists():
             self.config_dir.mkdir(parents=True)
         self.years = [2023, 2024, 2025]
-        self.cve_data: dict[str, list[tuple[str, str, str]]] = defaultdict(list)
+        self.cve_data: dict[str, list[tuple[str, str, str, str | None, str | None]]] = (
+            defaultdict(list)
+        )
         self._load_or_download()
 
     def _load_or_download(self) -> None:
@@ -66,8 +68,55 @@ class CveManager:
                         cpe_parts = cpe.get("cpe23Uri", "").split(":")
                         if len(cpe_parts) > CPE_LEN:
                             pkg = cpe_parts[CPE_LEN].lower()
-                            self.cve_data[pkg].append((cve_id, desc, severity))
+                            version_start = cpe.get("versionStartIncluding")
+                            version_end = cpe.get("versionEndExcluding")
+                            self.cve_data[pkg].append(
+                                (cve_id, desc, severity, version_start, version_end),
+                            )
 
-    def get_cves(self, pkg: str) -> list[tuple[str, str, str]]:
-        name = pkg.lower().split("-")[0]  # Basic heuristic
-        return self.cve_data.get(pkg.lower(), []) + self.cve_data.get(name, [])
+    def _compare_versions(self, v1: str, v2: str) -> int:
+        """
+        Compare two version strings.
+
+        Returns -1 if v1 < v2, 0 if equal, 1 if v1 > v2
+        """
+
+        def normalize(v: str) -> list[int]:
+            return [int(part) for part in v.split(".") if part.isdigit()]
+
+        parts1 = normalize(v1)
+        parts2 = normalize(v2)
+
+        # Pad shorter list with zeros
+        length = max(len(parts1), len(parts2))
+        parts1 += [0] * (length - len(parts1))
+        parts2 += [0] * (length - len(parts2))
+
+        for a, b in zip(parts1, parts2):
+            if a < b:
+                return -1
+            if a > b:
+                return 1
+        return 0
+
+    def get_cves(
+        self, pkg: str, version: str | None = None,
+    ) -> list[tuple[str, str, str]]:
+        name = pkg.lower().split("-")[0]
+        entries = self.cve_data.get(pkg.lower(), []) + self.cve_data.get(name, [])
+
+        if version is None:
+            return [(cve_id, desc, severity) for cve_id, desc, severity, *_ in entries]
+
+        result = []
+        for cve_id, desc, severity, version_start, version_end in entries:
+            try:
+                if version_start and self._compare_versions(version, version_start) < 0:
+                    continue
+                if version_end and self._compare_versions(version, version_end) >= 0:
+                    continue
+                result.append((cve_id, desc, severity))
+            except Exception:
+                continue
+
+        return result
