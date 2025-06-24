@@ -100,7 +100,9 @@ class CveManager:
         return 0
 
     def get_cves(
-        self, pkg: str, version: str | None = None,
+        self,
+        pkg: str,
+        version: str | None = None,
     ) -> list[tuple[str, str, str]]:
         name = pkg.lower().split("-")[0]
         entries = self.cve_data.get(pkg.lower(), []) + self.cve_data.get(name, [])

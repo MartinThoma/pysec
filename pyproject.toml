@@ -47,7 +47,7 @@ ignore = [
     "S112", # `try`-`except`-`continue` detected, consider logging the exception
     "S603",  # `subprocess` call: check for execution of untrusted input
     "S607",  # Starting a process with a partial executable path
-
+    "G004",  # Logging statement uses f-string
 ]
 
 
