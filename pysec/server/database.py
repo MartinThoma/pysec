@@ -1,26 +1,21 @@
 """Database models and utilities for pysec server."""
 
 from datetime import datetime, timezone
-from typing import TYPE_CHECKING
+from typing import Any
 
 from sqlalchemy import (
-    Column,
     DateTime,
     Integer,
     String,
     Text,
     create_engine,
 )
-from sqlalchemy.orm import Session, declarative_base, sessionmaker
+from sqlalchemy.orm import Mapped, Session, declarative_base, mapped_column, sessionmaker
 
 from pysec.config import ensure_directory, get_default_db_path
 
-if TYPE_CHECKING:
-    from sqlalchemy.orm import DeclarativeMeta
-
-    Base: DeclarativeMeta = declarative_base()
-else:
-    Base = declarative_base()
+# Create the base class
+Base: Any = declarative_base()
 
 
 class Client(Base):
@@ -28,11 +23,11 @@ class Client(Base):
 
     __tablename__ = "clients"
 
-    id = Column(Integer, primary_key=True)
-    name = Column(String(255), unique=True, nullable=False)
-    token = Column(String(255), unique=True, nullable=False)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    last_seen = Column(DateTime, nullable=True)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    name: Mapped[str] = mapped_column(String(255), unique=True, nullable=False)
+    token: Mapped[str] = mapped_column(String(255), unique=True, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    last_seen: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 
 
 class AuditLog(Base):
@@ -40,11 +35,11 @@ class AuditLog(Base):
 
     __tablename__ = "audit_logs"
 
-    id = Column(Integer, primary_key=True)
-    client_id = Column(Integer, nullable=False)
-    timestamp = Column(DateTime, nullable=False)
-    event = Column(Text, nullable=False)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    client_id: Mapped[int] = mapped_column(Integer, nullable=False)
+    timestamp: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+    event: Mapped[str] = mapped_column(Text, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
 
 class Package(Base):
@@ -52,11 +47,11 @@ class Package(Base):
 
     __tablename__ = "packages"
 
-    id = Column(Integer, primary_key=True)
-    client_id = Column(Integer, nullable=False)
-    name = Column(String(255), nullable=False)
-    version = Column(String(255), nullable=False)
-    submitted_at = Column(DateTime, default=datetime.utcnow)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    client_id: Mapped[int] = mapped_column(Integer, nullable=False)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    version: Mapped[str] = mapped_column(String(255), nullable=False)
+    submitted_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
 
 class DatabaseManager:
