@@ -27,10 +27,10 @@ def temp_db() -> Generator[DatabaseManager]:
     with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as f:
         db_path = f.name
 
-    db = DatabaseManager(db_path)
-    yield db
+    with DatabaseManager(db_path) as db:
+        yield db
 
-    # Cleanup
+    # Cleanup - database connections are automatically closed by context manager
     Path(db_path).unlink(missing_ok=True)
 
 

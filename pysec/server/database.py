@@ -1,5 +1,6 @@
 """Database models and utilities for pysec server."""
 
+import types
 from datetime import datetime, timezone
 from typing import Any
 
@@ -72,9 +73,27 @@ class DatabaseManager:
         )
         self.init_db()
 
+    def __enter__(self) -> "DatabaseManager":
+        """Enter context manager."""
+        return self
+
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: types.TracebackType | None,
+    ) -> None:
+        """Exit context manager and close connections."""
+        self.close()
+
     def init_db(self) -> None:
         """Initialize database tables."""
         Base.metadata.create_all(bind=self.engine)
+
+    def close(self) -> None:
+        """Close all database connections and dispose of the engine."""
+        if hasattr(self, "engine") and self.engine:
+            self.engine.dispose()
 
     def get_session(self) -> Session:
         """Get database session."""
