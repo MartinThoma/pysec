@@ -87,3 +87,6 @@ ignore = [
 "pysec/cli/client.py" = [
     "B008",  # Do not perform function call in argument defaults
 ]
+"database.py" = [
+    "PLR0913",  # Too many arguments in function definition (6 > 5)
+]

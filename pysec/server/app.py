@@ -341,12 +341,18 @@ async def submit_packages(
 
 @app.post("/api/security-info")
 async def submit_security_info(
-    security_request: SecurityInfoRequest,  # noqa: ARG001
+    security_request: SecurityInfoRequest,
     current_client: Client = Depends(get_current_client),
 ) -> dict[str, str]:
     """Submit security information."""
-    # For now, just acknowledge receipt
-    # In a real implementation, you might want to store this in the database
+    db.add_security_info(
+        client_id=current_client.id,
+        disk_encrypted=security_request.disk_encrypted,
+        screen_lock_timeout=security_request.screen_lock_timeout,
+        auto_updates_enabled=security_request.auto_updates_enabled,
+        os_checker_available=security_request.os_checker_available,
+        error=security_request.error,
+    )
     db.update_client_last_seen(current_client.id)
     return {"status": "success", "message": "Security information received"}
 
@@ -391,6 +397,29 @@ async def get_packages(
     ]
 
 
+@app.get("/api/security-info")
+async def get_security_info(
+    request: Request,  # noqa: ARG001
+    client_id: int | None = None,
+    _current_user: str = Depends(get_current_admin_user_from_cookie_or_header),
+) -> list[dict[str, Any]]:
+    """Get security information."""
+    security_info = db.get_security_info(client_id)
+    return [
+        {
+            "id": info.id,
+            "client_id": info.client_id,
+            "disk_encrypted": info.disk_encrypted,
+            "screen_lock_timeout": info.screen_lock_timeout,
+            "auto_updates_enabled": info.auto_updates_enabled,
+            "os_checker_available": info.os_checker_available,
+            "error": info.error,
+            "submitted_at": info.submitted_at,
+        }
+        for info in security_info
+    ]
+
+
 @app.get("/client/{client_id}", response_model=None)
 async def client_detail(
     client_id: int,
@@ -415,6 +444,7 @@ async def client_detail(
 
     audit_logs = db.get_audit_logs(client_id)
     packages = db.get_packages(client_id)
+    security_info = db.get_security_info(client_id)
 
     return templates.TemplateResponse(
         request,
@@ -424,6 +454,7 @@ async def client_detail(
             "client": client,
             "audit_logs": audit_logs,
             "packages": packages,
+            "security_info": security_info,
         },
     )
 

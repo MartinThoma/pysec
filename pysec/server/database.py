@@ -5,6 +5,7 @@ from datetime import datetime, timezone
 from typing import Any
 
 from sqlalchemy import (
+    Boolean,
     DateTime,
     Integer,
     String,
@@ -52,6 +53,21 @@ class Package(Base):
     client_id: Mapped[int] = mapped_column(Integer, nullable=False)
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     version: Mapped[str] = mapped_column(String(255), nullable=False)
+    submitted_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+
+class SecurityInfo(Base):
+    """Security information model for storing client security settings."""
+
+    __tablename__ = "security_info"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    client_id: Mapped[int] = mapped_column(Integer, nullable=False)
+    disk_encrypted: Mapped[bool | None] = mapped_column(Boolean, nullable=True)
+    screen_lock_timeout: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    auto_updates_enabled: Mapped[bool | None] = mapped_column(Boolean, nullable=True)
+    os_checker_available: Mapped[bool] = mapped_column(Boolean, default=False)
+    error: Mapped[str | None] = mapped_column(Text, nullable=True)
     submitted_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
 
@@ -169,3 +185,40 @@ class DatabaseManager:
             if client_id:
                 query = query.filter(Package.client_id == client_id)
             return query.order_by(Package.name).all()
+
+    def add_security_info(
+        self,
+        *,
+        client_id: int,
+        disk_encrypted: bool | None = None,
+        screen_lock_timeout: int | None = None,
+        auto_updates_enabled: bool | None = None,
+        os_checker_available: bool = False,
+        error: str | None = None,
+    ) -> None:
+        """Add security information for client."""
+        with self.get_session() as session:
+            # Remove existing security info for this client to keep only latest
+            session.query(SecurityInfo).filter(
+                SecurityInfo.client_id == client_id,
+            ).delete()
+
+            # Add new security info
+            security_info = SecurityInfo(
+                client_id=client_id,
+                disk_encrypted=disk_encrypted,
+                screen_lock_timeout=screen_lock_timeout,
+                auto_updates_enabled=auto_updates_enabled,
+                os_checker_available=os_checker_available,
+                error=error,
+            )
+            session.add(security_info)
+            session.commit()
+
+    def get_security_info(self, client_id: int | None = None) -> list[SecurityInfo]:
+        """Get security information, optionally filtered by client."""
+        with self.get_session() as session:
+            query = session.query(SecurityInfo)
+            if client_id:
+                query = query.filter(SecurityInfo.client_id == client_id)
+            return query.order_by(SecurityInfo.submitted_at.desc()).all()

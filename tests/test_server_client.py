@@ -16,6 +16,7 @@ from pysec.server.database import DatabaseManager
 
 TEST_TOKEN_VALUE = "test-token"  # noqa: S105
 
+
 @pytest.fixture
 def test_client() -> TestClient:
     """Create test client for FastAPI app."""
@@ -62,9 +63,10 @@ def test_client_config() -> None:
 
         try:
             # Test saving config
-            config = ClientConfig(server_url="http://localhost:8000",
-                                  token=TEST_TOKEN_VALUE,  # noaq: S106
-                                  )
+            config = ClientConfig(
+                server_url="http://localhost:8000",
+                token=TEST_TOKEN_VALUE,  # noaq: S106
+            )
             config.save()
             config_file = get_client_config_file()
             assert config_file.exists()

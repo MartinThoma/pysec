@@ -169,6 +169,90 @@
             padding: 2rem;
             color: #666;
         }
+
+        .empty-state p {
+            color: #666;
+        }
+
+        .security-info-item {
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            background: #fff;
+        }
+
+        .security-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .security-header h3 {
+            margin: 0;
+            color: #333;
+        }
+
+        .timestamp {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .security-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+        }
+
+        .security-item h4 {
+            margin: 0 0 0.5rem 0;
+            color: #555;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .security-value {
+            margin: 0;
+            font-size: 1rem;
+        }
+
+        .status-good {
+            color: #28a745;
+            font-weight: 600;
+        }
+
+        .status-warning {
+            color: #ffc107;
+            font-weight: 600;
+        }
+
+        .status-unknown {
+            color: #6c757d;
+            font-weight: 600;
+        }
+
+        .error-message {
+            margin-top: 1rem;
+            padding: 1rem;
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            border-radius: 5px;
+            color: #721c24;
+        }
+
+        .error-message h4 {
+            margin: 0 0 0.5rem 0;
+            font-size: 0.9rem;
+        }
+
+        .error-message p {
+            margin: 0;
+            font-family: monospace;
+            font-size: 0.9rem;
+        }
     </style>
 </head>
 <body>
@@ -232,6 +316,7 @@
                 <div class="tabs">
                     <div class="tab active" onclick="switchTab('audit-logs')">Audit Logs</div>
                     <div class="tab" onclick="switchTab('packages')">Packages</div>
+                    <div class="tab" onclick="switchTab('security-info')">Security Info</div>
                 </div>
 
                 <div id="audit-logs" class="tab-content active">
@@ -286,6 +371,81 @@
                     <div class="empty-state">
                         <h3>No packages yet</h3>
                         <p>This client hasn't submitted any package information.</p>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div id="security-info" class="tab-content">
+                    {% if security_info %}
+                    {% for info in security_info %}
+                    <div class="security-info-item">
+                        <div class="security-header">
+                            <h3>Security Information</h3>
+                            <span class="timestamp">{{ info.submitted_at.strftime('%Y-%m-%d %H:%M:%S') }}</span>
+                        </div>
+
+                        <div class="security-grid">
+                            <div class="security-item">
+                                <h4>Disk Encryption</h4>
+                                <p class="security-value">
+                                    {% if info.disk_encrypted is none %}
+                                    <span class="status-unknown">Unknown</span>
+                                    {% elif info.disk_encrypted %}
+                                    <span class="status-good">✓ Enabled</span>
+                                    {% else %}
+                                    <span class="status-warning">✗ Disabled</span>
+                                    {% endif %}
+                                </p>
+                            </div>
+
+                            <div class="security-item">
+                                <h4>Screen Lock Timeout</h4>
+                                <p class="security-value">
+                                    {% if info.screen_lock_timeout is none %}
+                                    <span class="status-unknown">Unknown</span>
+                                    {% else %}
+                                    {{ info.screen_lock_timeout }} seconds
+                                    {% endif %}
+                                </p>
+                            </div>
+
+                            <div class="security-item">
+                                <h4>Automatic Updates</h4>
+                                <p class="security-value">
+                                    {% if info.auto_updates_enabled is none %}
+                                    <span class="status-unknown">Unknown</span>
+                                    {% elif info.auto_updates_enabled %}
+                                    <span class="status-good">✓ Enabled</span>
+                                    {% else %}
+                                    <span class="status-warning">✗ Disabled</span>
+                                    {% endif %}
+                                </p>
+                            </div>
+
+                            <div class="security-item">
+                                <h4>OS Checker Available</h4>
+                                <p class="security-value">
+                                    {% if info.os_checker_available %}
+                                    <span class="status-good">✓ Available</span>
+                                    {% else %}
+                                    <span class="status-warning">✗ Not Available</span>
+                                    {% endif %}
+                                </p>
+                            </div>
+                        </div>
+
+                        {% if info.error %}
+                        <div class="error-message">
+                            <h4>Error</h4>
+                            <p>{{ info.error }}</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                    {% else %}
+                    <div class="empty-state">
+                        <h3>No security information yet</h3>
+                        <p>This client hasn't submitted any security information.</p>
                     </div>
                     {% endif %}
                 </div>
