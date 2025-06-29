@@ -24,7 +24,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = ["pytest", "ruff", "pre-commit", "mypy", "pytest-coverage", "types-requests"]
+dev = ["pytest", "ruff", "pre-commit", "mypy", "pytest-coverage", "types-requests", "httpx"]
 
 
 [project.scripts]

@@ -88,7 +88,8 @@ def test_server_login(test_client: TestClient) -> None:
 
     # Test POST login with correct password
     response = test_client.post(
-        "/login", data={"password": get_or_create_server_config().admin_password},
+        "/login",
+        data={"password": get_or_create_server_config().admin_password},
     )
     assert response.status_code == status.HTTP_200_OK
 
@@ -157,7 +158,8 @@ def test_security_info_endpoint(test_client: TestClient) -> None:
     """Test security information submission endpoint."""
     # Login as admin
     login_response = test_client.post(
-        "/login", data={"password": get_or_create_server_config().admin_password},
+        "/login",
+        data={"password": get_or_create_server_config().admin_password},
     )
     # Login might return 200 with error or 302 on success, check both
     if login_response.status_code == status.HTTP_200_OK:

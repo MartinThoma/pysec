@@ -34,7 +34,7 @@ class MacSecurityChecker(BaseSecurityChecker):
                     name = parts[0]
                     version = parts[1]
                     packages.append({"name": name, "version": version})
-            return packages  # noqa: TRY300
+            return packages
         except subprocess.CalledProcessError:
             return []
 
@@ -46,7 +46,7 @@ class MacSecurityChecker(BaseSecurityChecker):
                 capture_output=True,
                 text=True,
             )
-            return "FileVault is On" in result.stdout  # noqa: TRY300
+            return "FileVault is On" in result.stdout
         except Exception:
             return False
 
