@@ -57,6 +57,6 @@ ignore = [
     "D103", # Missing docstring in public function
     "S101",  # Use of `assert` detected
     ]
-"cli.py" = [
+"main.py" = [
     "B008",  # Do not perform function call `typer.Option` in argument defaults
 ]

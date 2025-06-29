@@ -8,8 +8,8 @@ import typer
 from rich import print
 
 from pysec import SeverityLevel
-from pysec.audit_config import check_config
-from pysec.audit_packages import audit_installed_packages
+from pysec.cli.audit_config import check_config
+from pysec.cli.audit_packages import audit_installed_packages
 
 app = typer.Typer(help="pysec: Security tools for your system")
 
