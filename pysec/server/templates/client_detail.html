@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Client Details - {{ client.name }}</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            line-height: 1.6;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            font-size: 1.5rem;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 5px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+
+        .card {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+            overflow: hidden;
+        }
+
+        .card-header {
+            background: #f8f9fa;
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .card-header h2 {
+            color: #333;
+            font-size: 1.2rem;
+        }
+
+        .card-body {
+            padding: 1.5rem;
+        }
+
+        .client-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .info-item {
+            background: #f8f9fa;
+            padding: 1rem;
+            border-radius: 5px;
+        }
+
+        .info-item h3 {
+            color: #333;
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+        }
+
+        .info-item p {
+            color: #666;
+            font-size: 1rem;
+        }
+
+        .token {
+            font-family: monospace;
+            background: #e9ecef;
+            padding: 0.5rem;
+            border-radius: 3px;
+            word-break: break-all;
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .table th,
+        .table td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .table th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .table tr:hover {
+            background: #f8f9fa;
+        }
+
+        .status-online {
+            color: #28a745;
+            font-weight: 500;
+        }
+
+        .status-offline {
+            color: #dc3545;
+            font-weight: 500;
+        }
+
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid #e0e0e0;
+            margin-bottom: 1rem;
+        }
+
+        .tab {
+            padding: 1rem 1.5rem;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.3s;
+        }
+
+        .tab.active {
+            border-bottom-color: #667eea;
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 2rem;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🔒 Client: {{ client.name }}</h1>
+        <div class="nav-links">
+            <a href="/dashboard">← Back to Dashboard</a>
+            <a href="/">Logout</a>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="card">
+            <div class="card-header">
+                <h2>Client Information</h2>
+            </div>
+            <div class="card-body">
+                <div class="client-info">
+                    <div class="info-item">
+                        <h3>Client Name</h3>
+                        <p>{{ client.name }}</p>
+                    </div>
+                    <div class="info-item">
+                        <h3>Status</h3>
+                        <p>
+                            {% if client.last_seen and (client.last_seen - client.created_at).total_seconds() > 0 %}
+                            <span class="status-online">Connected</span>
+                            {% else %}
+                            <span class="status-offline">Never connected</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                    <div class="info-item">
+                        <h3>Created</h3>
+                        <p>{{ client.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</p>
+                    </div>
+                    <div class="info-item">
+                        <h3>Last Seen</h3>
+                        <p>
+                            {% if client.last_seen %}
+                            {{ client.last_seen.strftime('%Y-%m-%d %H:%M:%S') }}
+                            {% else %}
+                            Never
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+
+                <div class="info-item">
+                    <h3>Authentication Token</h3>
+                    <p class="token">{{ client.token }}</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h2>Client Data</h2>
+            </div>
+            <div class="card-body">
+                <div class="tabs">
+                    <div class="tab active" onclick="switchTab('audit-logs')">Audit Logs</div>
+                    <div class="tab" onclick="switchTab('packages')">Packages</div>
+                </div>
+
+                <div id="audit-logs" class="tab-content active">
+                    {% if audit_logs %}
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Timestamp</th>
+                                <th>Event</th>
+                                <th>Submitted</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for log in audit_logs %}
+                            <tr>
+                                <td>{{ log.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                                <td>{{ log.event }}</td>
+                                <td>{{ log.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    {% else %}
+                    <div class="empty-state">
+                        <h3>No audit logs yet</h3>
+                        <p>This client hasn't submitted any audit logs.</p>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div id="packages" class="tab-content">
+                    {% if packages %}
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Package Name</th>
+                                <th>Version</th>
+                                <th>Submitted</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for package in packages %}
+                            <tr>
+                                <td>{{ package.name }}</td>
+                                <td>{{ package.version }}</td>
+                                <td>{{ package.submitted_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    {% else %}
+                    <div class="empty-state">
+                        <h3>No packages yet</h3>
+                        <p>This client hasn't submitted any package information.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function switchTab(tabName) {
+            // Hide all tab contents
+            const contents = document.querySelectorAll('.tab-content');
+            contents.forEach(content => content.classList.remove('active'));
+
+            // Remove active class from all tabs
+            const tabs = document.querySelectorAll('.tab');
+            tabs.forEach(tab => tab.classList.remove('active'));
+
+            // Show selected tab content
+            document.getElementById(tabName).classList.add('active');
+
+            // Add active class to clicked tab
+            event.target.classList.add('active');
+        }
+    </script>
+</body>
+</html>

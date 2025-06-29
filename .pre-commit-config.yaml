@@ -27,8 +27,16 @@ repos:
 -   repo: https://github.com/asottile/pyupgrade
     rev: v3.19.1
     hooks:
-    -   id: pyupgrade
-        args: [--py311-plus]
+
+    - id: pyupgrade
+      name: pyupgrade-general
+      args: [--py311-plus]
+      exclude: ^pysec/cli/  # skip `cli/` directory
+
+    - id: pyupgrade
+      name: pyupgrade-cli-conservative
+      args: [--py38-plus]  # to keep Optional[]
+      files: ^pysec/cli/
 
 -   repo: https://github.com/pre-commit/mirrors-mypy
     rev: 'v1.16.0'

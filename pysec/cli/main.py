@@ -10,11 +10,15 @@ from rich import print
 from pysec import SeverityLevel
 from pysec.cli.audit_config import check_config
 from pysec.cli.audit_packages import audit_installed_packages
+from pysec.cli.client import client_app
+from pysec.cli.server import server_app
 
 app = typer.Typer(help="pysec: Security tools for your system")
 
 audit_app = typer.Typer(help="Audit system configuration and packages")
 app.add_typer(audit_app, name="audit")
+app.add_typer(server_app, name="server")
+app.add_typer(client_app, name="client")
 
 
 @audit_app.command("config")

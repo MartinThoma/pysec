@@ -8,10 +8,19 @@ version = "0.1.0"
 description = "FOSS Endpoint Security"
 authors = [{ name = "Martin Thoma", email = "info@martin-thoma.de" }]
 dependencies = [
-    "rich",
-    "requests",
-    "typer[all]",
     "appdirs",
+    "cryptography",
+    "fastapi",
+    "jinja2",
+    "passlib[bcrypt]",
+    "pydantic",
+    "python-jose[cryptography]",
+    "python-multipart",
+    "requests",
+    "rich",
+    "sqlalchemy",
+    "typer[all]",
+    "uvicorn[standard]",
 ]
 
 [project.optional-dependencies]
@@ -19,7 +28,7 @@ dev = ["pytest", "ruff", "pre-commit", "mypy", "pytest-coverage", "types-request
 
 
 [project.scripts]
-pysec = "pysec.cli:main"
+pysec = "pysec.cli:app"
 
 [tool.flit.sdist]
 exclude = ["tests/", "*.pyc", "__pycache__"]
@@ -40,14 +49,17 @@ ignore = [
     "D104", #  Missing docstring in public package
     "D203",  # `incorrect-blank-line-before-class`
     "D212",    # I want multiline-docstrings to start at the second line
+    "FA100",  # Add `from __future__ import annotations` to simplify `typing.Optional`
     "FA102",  # Missing `from __future__ import annotations`, but uses PEP 604 union
+    "FAST002",  # FastAPI dependency without `Annotated`
+    "G004",  # Logging statement uses f-string
     "PERF203", # `try`-`except` within a loop incurs performance overhead
     "PLW2901",  # `for` loop variable `line` overwritten by assignment target
     "S110",  # `try`-`except`-`pass` detected, consider logging the exception
     "S112", # `try`-`except`-`continue` detected, consider logging the exception
     "S603",  # `subprocess` call: check for execution of untrusted input
     "S607",  # Starting a process with a partial executable path
-    "G004",  # Logging statement uses f-string
+    "TRY300", #  Consider moving this statement to an `else` block
 ]
 
 
@@ -59,4 +71,19 @@ ignore = [
     ]
 "main.py" = [
     "B008",  # Do not perform function call `typer.Option` in argument defaults
+]
+"pysec/server/app.py" = [
+    "B008",  # Do not perform function call in argument defaults
+    "S106",  # Possible hardcoded password
+]
+"pysec/server/auth.py" = [
+    "S106",  # Possible hardcoded password
+]
+"pysec/cli/*" = [
+    "FBT001",  # Boolean-typed positional argument in function definition
+    "FBT003", # Boolean positional value in function call
+    "B008",  # Do not perform function call in argument defaults
+]
+"pysec/cli/client.py" = [
+    "B008",  # Do not perform function call in argument defaults
 ]

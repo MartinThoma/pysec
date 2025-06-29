@@ -11,6 +11,20 @@ pysec offers the following components:
 1. `pysec audit config`: A tool to check the security configuration of a system.
 2. `pysec audit packages`: Get a list of all installed packages and CVEs related to them.
 
+## Features
+
+### Server-Client System
+
+You can add new clients by giving them a token. The client will appear in the
+dashboard:
+
+![](docs/pysec-server-dashboard.png)
+
+You can then get a detailed view of the client, including the installed
+packages and an auit log of the client:
+
+![](docs/pysec-server-client-detail.png)
+
 
 ## Try it out!
 
