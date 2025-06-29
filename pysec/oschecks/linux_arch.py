@@ -2,6 +2,7 @@
 
 import re
 import subprocess
+from datetime import datetime, timezone
 from pathlib import Path
 
 from pysec.osbase import BaseSecurityChecker
@@ -19,6 +20,78 @@ class ArchLinuxSecurityChecker(BaseSecurityChecker):
             name, version = line.strip().split(" ", 1)
             packages.append({"name": name, "version": version})
         return packages
+
+    def get_audit_events(self) -> list[dict[str, str]]:
+        """Get audit events from Arch Linux system."""
+        events = []
+
+        # Add current client run event
+        events.append(
+            {
+                "timestamp": datetime.now(tz=timezone.utc).isoformat(),
+                "event": "pysec_client_run",
+            },
+        )
+
+        # Get recent login events using last command
+        try:
+            result = subprocess.run(
+                ["last", "-n", "10"],
+                capture_output=True,
+                text=True,
+                check=True,
+            )
+            events.extend(
+                {
+                    "timestamp": datetime.now(tz=timezone.utc).isoformat(),
+                    "event": f"recent_login: {line.strip()}",
+                }
+                for line in result.stdout.strip().split("\n")
+                if line.strip() and not line.startswith("wtmp")
+            )
+        except (subprocess.CalledProcessError, FileNotFoundError):
+            pass
+
+        # Get recent pacman transactions
+        try:
+            result = subprocess.run(
+                ["journalctl", "-u", "pacman", "-n", "5", "--no-pager"],
+                capture_output=True,
+                text=True,
+                check=True,
+            )
+            events.extend(
+                {
+                    "timestamp": datetime.now(tz=timezone.utc).isoformat(),
+                    "event": f"pacman: {line.strip()}",
+                }
+                for line in result.stdout.strip().split("\n")
+                if line.strip()
+                and ("installed" in line or "upgraded" in line or "removed" in line)
+            )
+        except (subprocess.CalledProcessError, FileNotFoundError):
+            pass
+
+        # Get recent SSH authentication events
+        try:
+            result = subprocess.run(
+                ["journalctl", "-u", "sshd", "-n", "5", "--no-pager"],
+                capture_output=True,
+                text=True,
+                check=True,
+            )
+            events.extend(
+                {
+                    "timestamp": datetime.now(tz=timezone.utc).isoformat(),
+                    "event": f"ssh_auth: {line.strip()}",
+                }
+                for line in result.stdout.strip().split("\n")
+                if line.strip() and ("Accepted" in line or "Failed" in line)
+            )
+        except (subprocess.CalledProcessError, FileNotFoundError):
+            pass
+
+        return events
 
     def is_disk_encrypted(self) -> bool:
         # Check lsblk for devices using crypt

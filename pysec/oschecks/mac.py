@@ -1,6 +1,7 @@
 """Mac-specific security checks for pysec."""
 
 import subprocess
+from datetime import datetime, timezone
 
 from pysec.osbase import BaseSecurityChecker
 
@@ -37,6 +38,97 @@ class MacSecurityChecker(BaseSecurityChecker):
             return packages
         except subprocess.CalledProcessError:
             return []
+
+    def get_audit_events(self) -> list[dict[str, str]]:
+        """Get audit events from macOS system."""
+        events = []
+
+        # Add current client run event
+        events.append(
+            {
+                "timestamp": datetime.now(tz=timezone.utc).isoformat(),
+                "event": "pysec_client_run",
+            },
+        )
+
+        # Get recent login events using last command
+        try:
+            result = subprocess.run(
+                ["last", "-10"],
+                capture_output=True,
+                text=True,
+                check=True,
+            )
+            events.extend(
+                {
+                    "timestamp": datetime.now(tz=timezone.utc).isoformat(),
+                    "event": f"recent_login: {line.strip()}",
+                }
+                for line in result.stdout.strip().split("\n")
+                if line.strip() and not line.startswith("wtmp")
+            )
+        except (subprocess.CalledProcessError, FileNotFoundError):
+            pass
+
+        # Get recent application installations via log
+        try:
+            result = subprocess.run(
+                [
+                    "log",
+                    "show",
+                    "--last",
+                    "1d",
+                    "--predicate",
+                    "eventMessage CONTAINS 'installer'",
+                    "--max",
+                    "5",
+                ],
+                capture_output=True,
+                text=True,
+                check=True,
+            )
+            events.extend(
+                {
+                    "timestamp": datetime.now(tz=timezone.utc).isoformat(),
+                    "event": f"app_install: {line.strip()}",
+                }
+                for line in result.stdout.strip().split("\n")
+                if line.strip()
+                and ("installed" in line.lower() or "updated" in line.lower())
+            )
+        except (subprocess.CalledProcessError, FileNotFoundError):
+            pass
+
+        # Get recent security events
+        try:
+            result = subprocess.run(
+                [
+                    "log",
+                    "show",
+                    "--last",
+                    "1d",
+                    "--predicate",
+                    "eventMessage CONTAINS 'authentication'",
+                    "--max",
+                    "5",
+                ],
+                capture_output=True,
+                text=True,
+                check=True,
+            )
+            events.extend(
+                {
+                    "timestamp": datetime.now(tz=timezone.utc).isoformat(),
+                    "event": f"security_event: {line.strip()}",
+                }
+                for line in result.stdout.strip().split("\n")
+                if line.strip()
+                and ("succeeded" in line.lower() or "failed" in line.lower())
+            )
+        except (subprocess.CalledProcessError, FileNotFoundError):
+            pass
+
+        return events
 
     def is_disk_encrypted(self) -> bool:
         try:

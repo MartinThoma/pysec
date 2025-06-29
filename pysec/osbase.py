@@ -19,6 +19,18 @@ class BaseSecurityChecker(ABC):
         """
 
     @abstractmethod
+    def get_audit_events(self) -> list[dict[str, str]]:
+        """
+        Return a list of recent audit events from the system.
+
+        Each event should be a dictionary with 'timestamp' and 'event' keys.
+
+        Example:
+        [{"timestamp": "2023-06-29T10:30:00Z", "event": "user_login: alice"}, ...].
+
+        """
+
+    @abstractmethod
     def is_disk_encrypted(self) -> bool:
         """Return if the system disk is encrypted."""
 

@@ -2,6 +2,7 @@
 
 import logging
 import subprocess
+from datetime import datetime, timezone
 from pathlib import Path
 
 from pysec.osbase import BaseSecurityChecker
@@ -58,6 +59,78 @@ class UbuntuSecurityChecker(BaseSecurityChecker):
             logger.exception("Failed to list Snap packages")
 
         return packages
+
+    def get_audit_events(self) -> list[dict[str, str]]:
+        """Get audit events from Ubuntu system."""
+        events = []
+
+        # Add current client run event
+        events.append(
+            {
+                "timestamp": datetime.now(tz=timezone.utc).isoformat(),
+                "event": "pysec_client_run",
+            },
+        )
+
+        # Get recent login events using last command
+        try:
+            result = subprocess.run(
+                ["last", "-n", "10"],
+                capture_output=True,
+                text=True,
+                check=True,
+            )
+            events.extend(
+                {
+                    "timestamp": datetime.now(tz=timezone.utc).isoformat(),
+                    "event": f"recent_login: {line.strip()}",
+                }
+                for line in result.stdout.strip().split("\n")
+                if line.strip() and not line.startswith("wtmp")
+            )
+        except (subprocess.CalledProcessError, FileNotFoundError):
+            logger.debug("Failed to get login events with 'last' command")
+
+        # Get recent authentication events from auth.log
+        try:
+            result = subprocess.run(
+                ["journalctl", "-u", "ssh", "-n", "5", "--no-pager"],
+                capture_output=True,
+                text=True,
+                check=True,
+            )
+            events.extend(
+                {
+                    "timestamp": datetime.now(tz=timezone.utc).isoformat(),
+                    "event": f"ssh_auth: {line.strip()}",
+                }
+                for line in result.stdout.strip().split("\n")
+                if line.strip() and ("Accepted" in line or "Failed" in line)
+            )
+        except (subprocess.CalledProcessError, FileNotFoundError):
+            logger.debug("Failed to get SSH authentication events")
+
+        # Get recent package installations/updates
+        try:
+            result = subprocess.run(
+                ["journalctl", "-u", "apt-daily", "-n", "3", "--no-pager"],
+                capture_output=True,
+                text=True,
+                check=True,
+            )
+            events.extend(
+                {
+                    "timestamp": datetime.now(tz=timezone.utc).isoformat(),
+                    "event": f"package_update: {line.strip()}",
+                }
+                for line in result.stdout.strip().split("\n")
+                if line.strip()
+                and ("install" in line.lower() or "upgrade" in line.lower())
+            )
+        except (subprocess.CalledProcessError, FileNotFoundError):
+            logger.debug("Failed to get package update events")
+
+        return events
 
     def is_disk_encrypted(self) -> bool:
         # Check if root is on a LUKS volume (simplified)

@@ -3,7 +3,6 @@
 import json
 import subprocess
 import sys
-from datetime import datetime, timezone
 from typing import Any
 
 import requests
@@ -52,37 +51,17 @@ def get_installed_packages() -> list[dict[str, str]]:
 
 
 def get_audit_events() -> list[dict[str, str]]:
-    """Get audit events from the system."""
-    events = []
-
-    # Add current login event
-    events.append(
-        {
-            "timestamp": datetime.now(tz=timezone.utc).isoformat(),
-            "event": "pysec_client_run",
-        },
-    )
-
-    # Try to get recent login events
+    """Get audit events from the system using OS-specific checker."""
+    checker = get_checker()
+    if not checker:
+        return []
     try:
-        result = subprocess.run(
-            ["last", "-n", "10"],
-            capture_output=True,
-            text=True,
-            check=True,
+        return checker.get_audit_events()
+    except Exception as e:
+        print(
+            f"[yellow]Warning: OS-specific audit event collection failed: {e}[/yellow]",
         )
-        events.extend(
-            {
-                "timestamp": datetime.now(tz=timezone.utc).isoformat(),
-                "event": f"recent_login: {line.strip()}",
-            }
-            for line in result.stdout.strip().split("\n")
-            if line.strip() and not line.startswith("wtmp")
-        )
-    except (subprocess.CalledProcessError, FileNotFoundError):
-        pass
-
-    return events
+    return []
 
 
 class PysecClient:
