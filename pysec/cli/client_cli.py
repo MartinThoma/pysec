@@ -5,7 +5,7 @@ from typing import Optional
 import typer
 from rich import print
 
-from pysec.client import PysecClient, load_client_config, save_client_config
+from pysec.client import ClientConfig, PysecClient
 
 client_app = typer.Typer(help="Manage pysec client")
 
@@ -27,7 +27,8 @@ def configure_client(
 ) -> None:
     """Configure the pysec client."""
     try:
-        save_client_config(server_url, token)
+        config = ClientConfig(server_url=server_url, token=token)
+        config.save()
         print("[green]✓ Client configuration saved successfully[/green]")
         print(f"Server URL: {server_url}")
         print("Token: [hidden for security]")
@@ -54,7 +55,7 @@ def run_client(
     """Run the pysec client audit and submit data to server."""
     # Load from config file if not provided via command line
     if not server_url or not token:
-        config = load_client_config()
+        config = ClientConfig.load()
         if not config:
             print(
                 "[red]No client configuration found. "

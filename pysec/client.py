@@ -19,6 +19,33 @@ class ClientConfig(BaseModel):
     server_url: str
     token: str
 
+    @classmethod
+    def load(cls) -> "ClientConfig | None":
+        """Load client configuration from file."""
+        config_file = get_client_config_file()
+
+        if not config_file.exists():
+            return None
+
+        try:
+            with config_file.open() as f:
+                config_data = json.load(f)
+            return cls(**config_data)
+        except (OSError, json.JSONDecodeError, ValidationError) as e:
+            print(f"[yellow]Warning: Failed to load client config: {e}[/yellow]")
+            return None
+
+    def save(self) -> None:
+        """Save client configuration to file."""
+        config_file = get_client_config_file()
+        ensure_directory(config_file.parent)
+
+        with config_file.open("w") as f:
+            json.dump(self.model_dump(), f, indent=2)
+
+        # Set restrictive permissions
+        config_file.chmod(0o600)
+
 
 def get_installed_packages() -> list[dict[str, str]]:
     """Get list of installed packages and their versions using OS-specific checker."""
@@ -195,33 +222,3 @@ class PysecClient:
             print("[red]✗ Failed to submit security information[/red]")
 
         print("[bold green]Audit complete![/bold green]")
-
-
-def load_client_config() -> ClientConfig | None:
-    """Load client configuration from file."""
-    config_file = get_client_config_file()
-
-    if not config_file.exists():
-        return None
-
-    try:
-        with config_file.open() as f:
-            config_data = json.load(f)
-        return ClientConfig(**config_data)
-    except (OSError, json.JSONDecodeError, ValidationError) as e:
-        print(f"[yellow]Warning: Failed to load client config: {e}[/yellow]")
-        return None
-
-
-def save_client_config(server_url: str, token: str) -> None:
-    """Save client configuration to file."""
-    config_file = get_client_config_file()
-    ensure_directory(config_file.parent)
-
-    config = ClientConfig(server_url=server_url, token=token)
-
-    with config_file.open("w") as f:
-        json.dump(config.model_dump(), f, indent=2)
-
-    # Set restrictive permissions
-    config_file.chmod(0o600)

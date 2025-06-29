@@ -9,11 +9,12 @@ import pytest
 from fastapi import status
 from fastapi.testclient import TestClient
 
-from pysec.client import load_client_config, save_client_config
+from pysec.client import ClientConfig
 from pysec.config import get_client_config_file, get_or_create_server_config
 from pysec.server.app import app
 from pysec.server.database import DatabaseManager
 
+TEST_TOKEN_VALUE = "test-token"  # noqa: S105
 
 @pytest.fixture
 def test_client() -> TestClient:
@@ -37,19 +38,19 @@ def temp_db() -> Generator[DatabaseManager]:
 def test_database_manager(temp_db: DatabaseManager) -> None:
     """Test database manager functionality."""
     # Test creating a client
-    client = temp_db.create_client("test-client", "test-token")
+    client = temp_db.create_client("test-client", TEST_TOKEN_VALUE)
     assert client.name == "test-client"
-    assert client.token == "test-token"  # noqa: S105
+    assert client.token == TEST_TOKEN_VALUE
 
     # Test getting client by token
-    found_client = temp_db.get_client_by_token("test-token")
+    found_client = temp_db.get_client_by_token(TEST_TOKEN_VALUE)
     assert found_client is not None
     assert found_client.name == "test-client"
 
     # Test getting client by name
     found_client = temp_db.get_client_by_name("test-client")
     assert found_client is not None
-    assert found_client.token == "test-token"  # noqa: S105
+    assert found_client.token == TEST_TOKEN_VALUE
 
 
 def test_client_config() -> None:
@@ -61,15 +62,18 @@ def test_client_config() -> None:
 
         try:
             # Test saving config
-            save_client_config("http://localhost:8000", "test-token")
+            config = ClientConfig(server_url="http://localhost:8000",
+                                  token=TEST_TOKEN_VALUE,  # noaq: S106
+                                  )
+            config.save()
             config_file = get_client_config_file()
             assert config_file.exists()
 
             # Test loading config
-            config = load_client_config()
+            config = ClientConfig.load()
             assert config is not None
             assert config.server_url == "http://localhost:8000"
-            assert config.token == "test-token"  # noqa: S105
+            assert config.token == TEST_TOKEN_VALUE
 
         finally:
             # Restore original environment
