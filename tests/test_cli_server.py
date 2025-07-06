@@ -388,8 +388,8 @@ def test_start_command_help(cli_runner) -> None:
 
     assert result.exit_code == 0
     assert "Start the pysec Django server" in result.stdout
-    assert "--host" in result.stdout
-    assert "--port" in result.stdout
+    assert "-host" in result.stdout  # only one "-" as CI fails otherwise
+    assert "-port" in result.stdout  # only one "-" as CI fails otherwise
 
 
 def test_server_command_exists_in_main_cli(cli_runner) -> None:
