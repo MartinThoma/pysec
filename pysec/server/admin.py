@@ -1,10 +1,16 @@
 """Django admin for pysec server."""
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from django.contrib import admin
-from django.forms import ModelForm
-from django.http import HttpRequest
 
 from .models import AuditLog, Client, Package, SecurityInfo
+
+if TYPE_CHECKING:
+    from django.forms import ModelForm
+    from django.http import HttpRequest
 
 
 @admin.register(Client)
@@ -25,7 +31,7 @@ class ClientAdmin(admin.ModelAdmin):
 
     def get_form(
         self, request: HttpRequest, obj: Client | None = None, **kwargs
-    ) -> type[ModelForm[Client]]:
+    ) -> type[ModelForm]:
         """Customize the form to show token help text."""
         form = super().get_form(request, obj, **kwargs)
         form.base_fields[
