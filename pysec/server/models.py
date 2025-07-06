@@ -74,7 +74,7 @@ class SecurityInfo(models.Model):
     screen_lock_timeout = models.IntegerField(null=True, blank=True)
     auto_updates_enabled = models.BooleanField(null=True, blank=True)
     os_checker_available = models.BooleanField(default=False)
-    error = models.TextField(blank=True)
+    error = models.TextField(null=True, blank=True)  # noqa: DJ001
     submitted_at = models.DateTimeField(default=timezone.now)
 
     class Meta:
