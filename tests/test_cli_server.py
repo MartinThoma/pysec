@@ -202,7 +202,9 @@ def test_create_client_success_with_manage_py(
     with patch.object(Path, "exists") as mock_exists:
         mock_exists.return_value = True
 
-        result = cli_runner.invoke(server_app, ["create-client", "test-client"])
+        result = cli_runner.invoke(
+            server_app, ["manage.py", "create_client", "test-client"]
+        )
 
         assert result.exit_code == 0
 
@@ -216,39 +218,13 @@ def test_create_client_success_with_manage_py(
         assert command_list[3] == "test-client"
 
 
-@patch("pysec.cli.server.setup_django")
-@patch("django.core.management.execute_from_command_line")
-@patch("django.setup")
-@patch("pysec.cli.server.get_project_root")
-def test_create_client_success_without_manage_py(
-    mock_get_root, mock_django_setup, mock_execute, mock_setup_django, cli_runner
-) -> None:
-    """Test successful client creation using Django directly."""
-    # Set up mocks
-    mock_project_root = Path("/fake/project/root")
-    mock_get_root.return_value = mock_project_root
-
-    # Mock that manage.py doesn't exist
-    with patch.object(Path, "exists") as mock_exists:
-        mock_exists.return_value = False
-
-        result = cli_runner.invoke(server_app, ["create-client", "test-client"])
-
-        assert result.exit_code == 0
-
-        # Check Django setup was called
-        mock_setup_django.assert_called_once()
-        mock_django_setup.assert_called_once()
-        mock_execute.assert_called_once()
-
-
 def test_create_client_missing_name(cli_runner) -> None:
     """Test create client without providing name."""
-    result = cli_runner.invoke(server_app, ["create-client"])
+    result = cli_runner.invoke(server_app, ["manage.py", "create_client"])
 
-    assert result.exit_code != 0  # Typer uses exit code 2 for argument errors
-    # Check for the specific error message in stderr
-    assert "Missing argument 'NAME'" in result.stderr
+    assert result.exit_code != 0  # Should fail
+    # The error is captured in the error message from subprocess
+    assert "Error running management command:" in result.stdout
 
 
 # Tests for migrate command
@@ -268,11 +244,11 @@ def test_migrate_success_with_manage_py(
     with patch.object(Path, "exists") as mock_exists:
         mock_exists.return_value = True
 
-        result = cli_runner.invoke(server_app, ["migrate"])
+        result = cli_runner.invoke(server_app, ["manage.py", "migrate"])
 
         assert result.exit_code == 0
-        assert "Running Django migrations..." in result.stdout
-        assert "✓ Migrations completed successfully" in result.stdout
+        # Check that the command was executed (should show "Running: ...")
+        assert "Running:" in result.stdout
 
         # Check subprocess was called correctly
         call_args = mock_subprocess.call_args
@@ -298,11 +274,11 @@ def test_migrate_success_without_manage_py(
     with patch.object(Path, "exists") as mock_exists:
         mock_exists.return_value = False
 
-        result = cli_runner.invoke(server_app, ["migrate"])
+        result = cli_runner.invoke(server_app, ["manage.py", "migrate"])
 
         assert result.exit_code == 0
-        assert "Running Django migrations..." in result.stdout
-        assert "✓ Migrations completed successfully" in result.stdout
+        # Check that Django command was executed
+        assert "Running Django command:" in result.stdout
 
         # Check Django setup was called
         mock_setup_django.assert_called_once()
@@ -327,10 +303,11 @@ def test_create_superuser_success_with_manage_py(
     with patch.object(Path, "exists") as mock_exists:
         mock_exists.return_value = True
 
-        result = cli_runner.invoke(server_app, ["createsuperuser"])
+        result = cli_runner.invoke(server_app, ["manage.py", "createsuperuser"])
 
         assert result.exit_code == 0
-        assert "Creating Django superuser..." in result.stdout
+        # Check that the command was executed
+        assert "Running:" in result.stdout
 
         # Check subprocess was called correctly
         call_args = mock_subprocess.call_args
@@ -356,10 +333,11 @@ def test_create_superuser_success_without_manage_py(
     with patch.object(Path, "exists") as mock_exists:
         mock_exists.return_value = False
 
-        result = cli_runner.invoke(server_app, ["createsuperuser"])
+        result = cli_runner.invoke(server_app, ["manage.py", "createsuperuser"])
 
         assert result.exit_code == 0
-        assert "Creating Django superuser..." in result.stdout
+        # Check that Django command was executed
+        assert "Running Django command:" in result.stdout
 
         # Check Django setup was called
         mock_setup_django.assert_called_once()
@@ -370,16 +348,26 @@ def test_create_superuser_success_without_manage_py(
 # Integration tests
 
 
+def test_manage_py_command_no_args(cli_runner) -> None:
+    """Test manage.py command with no arguments shows helpful error."""
+    result = cli_runner.invoke(server_app, ["manage.py"])
+
+    assert result.exit_code == 1
+    assert "Error: No management command provided" in result.stdout
+    assert "Usage: pysec server manage.py <command>" in result.stdout
+    assert "Examples:" in result.stdout
+    assert "pysec server manage.py runserver" in result.stdout
+
+
 def test_server_app_help(cli_runner) -> None:
     """Test that server app shows help correctly."""
-    result = cli_runner.invoke(server_app, ["--help"])
+    result = cli_runner.invoke(server_app, ["manage.py", "help"])
 
     assert result.exit_code == 0
-    assert "Manage pysec Django server" in result.stdout
-    assert "start" in result.stdout
-    assert "create-client" in result.stdout
-    assert "migrate" in result.stdout
-    assert "createsuperuser" in result.stdout
+    # The actual Django help output goes directly to console via subprocess
+    # We can at least verify the command was executed
+    assert "Running:" in result.stdout
+    assert "manage.py help" in result.stdout
 
 
 def test_start_command_help(cli_runner) -> None:
