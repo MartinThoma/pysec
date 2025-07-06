@@ -13,6 +13,7 @@ dependencies = [
     "django>=5.1.0",
     "django-extensions",
     "django_rest_framework",
+    "drf-spectacular",
     "pydantic",
     "requests",
     "rich",
@@ -92,6 +93,9 @@ ignore = [
 ]
 "pysec/server/serializers.py" = [
     "D106",  # Missing docstring in public nested class
+]
+"pysec/server/views.py" = [
+    "E501",  # Line too long - can happen with spectacular decorators
 ]
 "pysec/server/auth.py" = [
     "S106",  # Possible hardcoded password

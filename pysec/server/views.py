@@ -10,6 +10,8 @@ from django.contrib.auth.decorators import login_required
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_http_methods
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import OpenApiParameter, extend_schema, extend_schema_view
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
@@ -95,6 +97,15 @@ class ClientAPIView(APIView):
         return getattr(user, "client", user) if hasattr(user, "client") else user  # type: ignore[return-value]
 
 
+@extend_schema_view(
+    post=extend_schema(
+        summary="Submit audit log",
+        description="Submit a new audit log entry for the authenticated client",
+        request=AuditLogCreateSerializer,
+        responses={201: {"description": "Audit log created successfully"}},
+        tags=["Client API"],
+    )
+)
 class AuditLogAPIView(ClientAPIView):
     """API endpoint for audit log submission."""
 
@@ -111,6 +122,15 @@ class AuditLogAPIView(ClientAPIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+@extend_schema_view(
+    post=extend_schema(
+        summary="Submit package list",
+        description="Update the package list for the authenticated client",
+        request=PackagesListSerializer,
+        responses={200: {"description": "Package list updated successfully"}},
+        tags=["Client API"],
+    )
+)
 class PackagesAPIView(ClientAPIView):
     """API endpoint for package list submission."""
 
@@ -127,6 +147,15 @@ class PackagesAPIView(ClientAPIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+@extend_schema_view(
+    post=extend_schema(
+        summary="Submit security information",
+        description="Submit security information for the authenticated client",
+        request=SecurityInfoCreateSerializer,
+        responses={201: {"description": "Security information created successfully"}},
+        tags=["Client API"],
+    )
+)
 class SecurityInfoAPIView(ClientAPIView):
     """API endpoint for security information submission."""
 
@@ -146,6 +175,21 @@ class SecurityInfoAPIView(ClientAPIView):
 # Admin API Views
 
 
+@extend_schema(
+    methods=["GET"],
+    summary="List clients",
+    description="Get a list of all registered clients",
+    responses={200: ClientSerializer(many=True)},
+    tags=["Admin API"],
+)
+@extend_schema(
+    methods=["POST"],
+    summary="Create client",
+    description="Create a new client registration",
+    request=ClientCreateSerializer,
+    responses={201: ClientCreateSerializer},
+    tags=["Admin API"],
+)
 @api_view(["GET", "POST"])
 @permission_classes([IsAuthenticated])
 def api_clients(request: Request) -> Response:
@@ -163,6 +207,21 @@ def api_clients(request: Request) -> Response:
     return Response(serializer.data)
 
 
+@extend_schema(
+    summary="Get audit logs",
+    description="Retrieve audit logs, optionally filtered by client ID",
+    parameters=[
+        OpenApiParameter(
+            name="client_id",
+            location=OpenApiParameter.QUERY,
+            description="Filter by client ID",
+            required=False,
+            type=OpenApiTypes.INT,
+        )
+    ],
+    responses={200: AuditLogSerializer(many=True)},
+    tags=["Admin API"],
+)
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def api_audit_logs(request: Request) -> Response:
@@ -178,6 +237,21 @@ def api_audit_logs(request: Request) -> Response:
     return Response(serializer.data)
 
 
+@extend_schema(
+    summary="Get packages",
+    description="Retrieve packages, optionally filtered by client ID",
+    parameters=[
+        OpenApiParameter(
+            name="client_id",
+            location=OpenApiParameter.QUERY,
+            description="Filter by client ID",
+            required=False,
+            type=OpenApiTypes.INT,
+        )
+    ],
+    responses={200: PackageSerializer(many=True)},
+    tags=["Admin API"],
+)
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def api_packages(request: Request) -> Response:
@@ -193,6 +267,21 @@ def api_packages(request: Request) -> Response:
     return Response(serializer.data)
 
 
+@extend_schema(
+    summary="Get security information",
+    description="Retrieve security information, optionally filtered by client ID",
+    parameters=[
+        OpenApiParameter(
+            name="client_id",
+            location=OpenApiParameter.QUERY,
+            description="Filter by client ID",
+            required=False,
+            type=OpenApiTypes.INT,
+        )
+    ],
+    responses={200: SecurityInfoSerializer(many=True)},
+    tags=["Admin API"],
+)
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def api_security_info(request: Request) -> Response:

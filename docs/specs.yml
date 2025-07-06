@@ -1,0 +1,416 @@
+openapi: 3.0.3
+info:
+  title: PySec API
+  version: 0.1.0
+  description: FOSS Endpoint Security API
+paths:
+  /api/audit-log/:
+    post:
+      operationId: audit_log_create
+      description: Submit a new audit log entry for the authenticated client
+      summary: Submit audit log
+      tags:
+      - Client API
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuditLogCreateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AuditLogCreateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AuditLogCreateRequest'
+        required: true
+      security:
+      - ClientTokenAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                description: Audit log created successfully
+          description: ''
+  /api/audit-logs/:
+    get:
+      operationId: audit_logs_list
+      description: Retrieve audit logs, optionally filtered by client ID
+      summary: Get audit logs
+      parameters:
+      - in: query
+        name: client_id
+        schema:
+          type: integer
+        description: Filter by client ID
+      tags:
+      - Admin API
+      security:
+      - cookieAuth: []
+      - ClientTokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AuditLog'
+          description: ''
+  /api/clients/:
+    get:
+      operationId: clients_list
+      description: Get a list of all registered clients
+      summary: List clients
+      tags:
+      - Admin API
+      security:
+      - cookieAuth: []
+      - ClientTokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Client'
+          description: ''
+    post:
+      operationId: clients_create
+      description: Create a new client registration
+      summary: Create client
+      tags:
+      - Admin API
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClientCreateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ClientCreateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ClientCreateRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      - ClientTokenAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClientCreate'
+          description: ''
+  /api/packages/:
+    post:
+      operationId: packages_create
+      description: Update the package list for the authenticated client
+      summary: Submit package list
+      tags:
+      - Client API
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PackagesListRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PackagesListRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PackagesListRequest'
+        required: true
+      security:
+      - ClientTokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                description: Package list updated successfully
+          description: ''
+  /api/packages-list/:
+    get:
+      operationId: packages_list_list
+      description: Retrieve packages, optionally filtered by client ID
+      summary: Get packages
+      parameters:
+      - in: query
+        name: client_id
+        schema:
+          type: integer
+        description: Filter by client ID
+      tags:
+      - Admin API
+      security:
+      - cookieAuth: []
+      - ClientTokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Package'
+          description: ''
+  /api/security-info/:
+    post:
+      operationId: security_info_create
+      description: Submit security information for the authenticated client
+      summary: Submit security information
+      tags:
+      - Client API
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SecurityInfoCreateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/SecurityInfoCreateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/SecurityInfoCreateRequest'
+      security:
+      - ClientTokenAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                description: Security information created successfully
+          description: ''
+  /api/security-info-list/:
+    get:
+      operationId: security_info_list_list
+      description: Retrieve security information, optionally filtered by client ID
+      summary: Get security information
+      parameters:
+      - in: query
+        name: client_id
+        schema:
+          type: integer
+        description: Filter by client ID
+      tags:
+      - Admin API
+      security:
+      - cookieAuth: []
+      - ClientTokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SecurityInfo'
+          description: ''
+components:
+  schemas:
+    AuditLog:
+      type: object
+      description: Serializer for AuditLog model.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        client_id:
+          type: integer
+          readOnly: true
+        timestamp:
+          type: string
+          format: date-time
+        event:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - client_id
+      - created_at
+      - event
+      - id
+      - timestamp
+    AuditLogCreateRequest:
+      type: object
+      description: Serializer for creating audit logs.
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+        event:
+          type: string
+          minLength: 1
+      required:
+      - event
+      - timestamp
+    Client:
+      type: object
+      description: Serializer for Client model.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 255
+        token:
+          type: string
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        last_seen:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+      required:
+      - created_at
+      - id
+      - last_seen
+      - name
+      - token
+    ClientCreate:
+      type: object
+      description: Serializer for creating new clients.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 255
+        token:
+          type: string
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - id
+      - name
+      - token
+    ClientCreateRequest:
+      type: object
+      description: Serializer for creating new clients.
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 255
+      required:
+      - name
+    Package:
+      type: object
+      description: Serializer for Package model.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        client_id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 255
+        version:
+          type: string
+          maxLength: 255
+        submitted_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - client_id
+      - id
+      - name
+      - submitted_at
+      - version
+    PackagesListRequest:
+      type: object
+      description: Serializer for bulk package creation.
+      properties:
+        packages:
+          type: array
+          items:
+            type: object
+            additionalProperties:
+              type: string
+              minLength: 1
+      required:
+      - packages
+    SecurityInfo:
+      type: object
+      description: Serializer for SecurityInfo model.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        client_id:
+          type: integer
+          readOnly: true
+        disk_encrypted:
+          type: boolean
+          nullable: true
+        screen_lock_timeout:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+          nullable: true
+        auto_updates_enabled:
+          type: boolean
+          nullable: true
+        os_checker_available:
+          type: boolean
+        error:
+          type: string
+          nullable: true
+        submitted_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - client_id
+      - id
+      - submitted_at
+    SecurityInfoCreateRequest:
+      type: object
+      description: Serializer for creating security info.
+      properties:
+        disk_encrypted:
+          type: boolean
+          nullable: true
+        screen_lock_timeout:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+          nullable: true
+        auto_updates_enabled:
+          type: boolean
+          nullable: true
+        os_checker_available:
+          type: boolean
+        error:
+          type: string
+          nullable: true
+  securitySchemes:
+    ClientTokenAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: Token
+      description: Client token authentication using Bearer token
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: sessionid

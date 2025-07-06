@@ -17,7 +17,7 @@ from pysec.cli.server import (
 @pytest.fixture
 def cli_runner() -> CliRunner:
     """Provide a CLI runner for testing."""
-    return CliRunner(env={"NO_COLOR": "1"}, mix_stderr=False)
+    return CliRunner(env={"NO_COLOR": "1"})
 
 
 # Tests for get_project_root function

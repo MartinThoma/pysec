@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
+import contextlib
 import os
 from pathlib import Path
 
@@ -42,6 +43,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "rest_framework",
+    "drf_spectacular",
     "django_extensions",
     "pysec.server",  # Our pysec server app
 ]
@@ -149,4 +151,20 @@ REST_FRAMEWORK = {
     ],
     "PAGE_SIZE": 100,
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
 }
+
+# drf-spectacular settings
+SPECTACULAR_SETTINGS = {
+    "TITLE": "PySec API",
+    "DESCRIPTION": "FOSS Endpoint Security API",
+    "VERSION": "0.1.0",
+    "SERVE_INCLUDE_SCHEMA": False,
+    "COMPONENT_SPLIT_REQUEST": True,
+    "SCHEMA_PATH_PREFIX": "/api/",
+}
+
+# Load spectacular extensions
+with contextlib.suppress(ImportError):
+    # Import the extensions module to register the extensions
+    import pysec.server.spectacular_extensions  # noqa: F401
