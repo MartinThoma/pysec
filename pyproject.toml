@@ -10,25 +10,21 @@ authors = [{ name = "Martin Thoma", email = "info@martin-thoma.de" }]
 dependencies = [
     "appdirs",
     "cryptography",
-    "fastapi",
-    "jinja2",
-    "passlib[bcrypt]",
+    "django>=5.1.0",
+    "django-extensions",
+    "django_rest_framework",
     "pydantic",
-    "python-jose[cryptography]",
-    "python-multipart",
     "requests",
     "rich",
-    "sqlalchemy",
     "typer[all]",
-    "uvicorn[standard]",
 ]
 
 [project.optional-dependencies]
-dev = ["pytest", "ruff", "pre-commit", "mypy", "pytest-coverage", "types-requests", "httpx"]
+dev = ["pytest", "ruff", "pre-commit", "mypy", "pytest-coverage", "types-requests", "httpx", "pytest-django"]
 
 
 [project.scripts]
-pysec = "pysec.cli:app"
+pysec = "pysec.cli.main:main"
 
 [tool.flit.sdist]
 exclude = ["tests/", "*.pyc", "__pycache__"]
@@ -43,22 +39,29 @@ line-length = 89
 select = ["ALL"]
 ignore = [
     "A004",  # Import `print` is shadowing a Python builtin
+    "ANN002", #  Missing type annotation for `*args`
+    "ANN003", #  Missing type annotation for `**kwargs`
     "BLE001",  # Do not catch blind exception: `Exception`
+    "COM812",  # Conflicts with 'ruff format'
     "D101", #  Missing docstring in public class
     "D102",  # Missing docstring in public method
     "D104", #  Missing docstring in public package
+    "D105",  # Missing docstring in magic method"
     "D203",  # `incorrect-blank-line-before-class`
     "D212",    # I want multiline-docstrings to start at the second line
+    "D401", # First line of docstring should be in imperative mood
+    "EM101",  # Exception must not use a string literal, assign to variable first
     "FA100",  # Add `from __future__ import annotations` to simplify `typing.Optional`
     "FA102",  # Missing `from __future__ import annotations`, but uses PEP 604 union
-    "FAST002",  # FastAPI dependency without `Annotated`
     "G004",  # Logging statement uses f-string
     "PERF203", # `try`-`except` within a loop incurs performance overhead
     "PLW2901",  # `for` loop variable `line` overwritten by assignment target
+    "RUF012", # Mutable class attributes should be annotated with `typing.ClassVar`
     "S110",  # `try`-`except`-`pass` detected, consider logging the exception
     "S112", # `try`-`except`-`continue` detected, consider logging the exception
     "S603",  # `subprocess` call: check for execution of untrusted input
     "S607",  # Starting a process with a partial executable path
+    "TRY003",  # Avoid specifying long messages outside the exception class
     "TRY300", #  Consider moving this statement to an `else` block
 ]
 
@@ -68,6 +71,8 @@ ignore = [
     "INP001",
     "D103", # Missing docstring in public function
     "S101",  # Use of `assert` detected
+    "ARG001",  # Unused function argument clashes with pytest fixtures
+    "ANN001",  # Missing type annotation for function argument - also bad for fixtures
     ]
 "main.py" = [
     "B008",  # Do not perform function call `typer.Option` in argument defaults
@@ -76,8 +81,14 @@ ignore = [
     "B008",  # Do not perform function call in argument defaults
     "S106",  # Possible hardcoded password
 ]
+"pysec/server/models.py" = [
+    "D106",  # Missing docstring in public nested class
+]
 "pysec/server/auth.py" = [
     "S106",  # Possible hardcoded password
+]
+"pysec/server/migrations/*" = [
+    "D100",  # Missing docstring in public module
 ]
 "pysec/cli/*" = [
     "FBT001",  # Boolean-typed positional argument in function definition
@@ -89,4 +100,12 @@ ignore = [
 ]
 "database.py" = [
     "PLR0913",  # Too many arguments in function definition (6 > 5)
+]
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "tests.test_settings"
+python_files = ["tests.py", "test_*.py", "*_tests.py"]
+addopts = "--tb=short --strict-markers"
+markers = [
+    "django_db: mark test to use Django database."
 ]

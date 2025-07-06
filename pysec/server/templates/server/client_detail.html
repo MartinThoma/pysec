@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Client Details - {{ client.name }}</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            line-height: 1.6;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            font-size: 1.5rem;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 5px;
+            transition: background 0.3s;
+        }
+
+        .nav-links a:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-bottom: 1rem;
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
+        }
+
+        .client-info {
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+        }
+
+        .client-info h2 {
+            color: #333;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .status-online { background-color: #28a745; }
+        .status-offline { background-color: #dc3545; }
+
+        .client-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .detail-item h4 {
+            color: #666;
+            font-size: 0.9rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .detail-item p {
+            font-size: 1rem;
+            color: #333;
+        }
+
+        .section {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+        }
+
+        .section-header {
+            background: #667eea;
+            color: white;
+            padding: 1rem 2rem;
+            border-radius: 10px 10px 0 0;
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .section-content {
+            padding: 2rem;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid #e1e5e9;
+        }
+
+        th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #555;
+        }
+
+        .empty-state {
+            text-align: center;
+            color: #6c757d;
+            padding: 2rem;
+            font-style: italic;
+        }
+
+        .security-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+        }
+
+        .security-item {
+            background: #f8f9fa;
+            padding: 1rem;
+            border-radius: 5px;
+        }
+
+        .security-item h4 {
+            margin: 0 0 0.5rem 0;
+            color: #555;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .security-value {
+            margin: 0;
+            font-size: 1rem;
+        }
+
+        .status-good {
+            color: #28a745;
+            font-weight: 600;
+        }
+
+        .status-warning {
+            color: #ffc107;
+            font-weight: 600;
+        }
+
+        .status-danger {
+            color: #dc3545;
+            font-weight: 600;
+        }
+
+        .status-unknown {
+            color: #6c757d;
+            font-weight: 600;
+        }
+
+        .timestamp {
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🔒 PySec - Client Details</h1>
+        <div class="nav-links">
+            <a href="{% url 'server:dashboard' %}">Dashboard</a>
+            <a href="/admin/">Admin</a>
+        </div>
+    </div>
+
+    <div class="container">
+        <a href="{% url 'server:dashboard' %}" class="back-link">← Back to Dashboard</a>
+
+        <div class="client-info">
+            <h2>
+                <span class="status-indicator {% if client.last_seen %}status-online{% else %}status-offline{% endif %}"></span>
+                {{ client.name }}
+            </h2>
+
+            <div class="client-details">
+                <div class="detail-item">
+                    <h4>Client ID</h4>
+                    <p>{{ client.id }}</p>
+                </div>
+                <div class="detail-item">
+                    <h4>Created</h4>
+                    <p>{{ client.created_at|date:"M d, Y H:i" }}</p>
+                </div>
+                <div class="detail-item">
+                    <h4>Last Seen</h4>
+                    <p>
+                        {% if client.last_seen %}
+                            {{ client.last_seen|date:"M d, Y H:i" }}
+                        {% else %}
+                            Never
+                        {% endif %}
+                    </p>
+                </div>
+                <div class="detail-item">
+                    <h4>Token</h4>
+                    <p style="font-family: monospace; font-size: 0.9rem;">{{ client.token|truncatechars:16 }}...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Security Information -->
+        <div class="section">
+            <div class="section-header">
+                Security Information
+            </div>
+            <div class="section-content">
+                {% if security_info %}
+                    {% for info in security_info|slice:":1" %}
+                        <div class="security-grid">
+                            <div class="security-item">
+                                <h4>OS Version</h4>
+                                <p class="security-value">{{ info.os_version|default:"Unknown" }}</p>
+                            </div>
+                            <div class="security-item">
+                                <h4>Kernel Version</h4>
+                                <p class="security-value">{{ info.kernel_version|default:"Unknown" }}</p>
+                            </div>
+                            <div class="security-item">
+                                <h4>Architecture</h4>
+                                <p class="security-value">{{ info.architecture|default:"Unknown" }}</p>
+                            </div>
+                            <div class="security-item">
+                                <h4>Security Updates</h4>
+                                <p class="security-value status-good">{{ info.security_updates_count|default:0 }} available</p>
+                            </div>
+                        </div>
+                        <p class="timestamp">Last updated: {{ info.submitted_at|date:"M d, Y H:i" }}</p>
+                    {% endfor %}
+                {% else %}
+                    <div class="empty-state">
+                        No security information reported yet
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Packages -->
+        <div class="section">
+            <div class="section-header">
+                Installed Packages ({{ packages.count }})
+            </div>
+            <div class="section-content">
+                {% if packages %}
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Package</th>
+                                <th>Version</th>
+                                <th>Last Updated</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for package in packages|slice:":20" %}
+                            <tr>
+                                <td>{{ package.name }}</td>
+                                <td>{{ package.version }}</td>
+                                <td class="timestamp">{{ package.submitted_at|date:"M d, Y H:i" }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    {% if packages.count > 20 %}
+                        <p class="timestamp" style="margin-top: 1rem;">
+                            Showing first 20 of {{ packages.count }} packages
+                        </p>
+                    {% endif %}
+                {% else %}
+                    <div class="empty-state">
+                        No packages reported yet
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Audit Logs -->
+        <div class="section">
+            <div class="section-header">
+                Recent Audit Logs ({{ audit_logs.count }})
+            </div>
+            <div class="section-content">
+                {% if audit_logs %}
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Timestamp</th>
+                                <th>Type</th>
+                                <th>Message</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for log in audit_logs|slice:":10" %}
+                            <tr>
+                                <td class="timestamp">{{ log.timestamp|date:"M d, Y H:i:s" }}</td>
+                                <td>{{ log.log_type|default:"INFO" }}</td>
+                                <td>{{ log.message|truncatechars:100 }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    {% if audit_logs.count > 10 %}
+                        <p class="timestamp" style="margin-top: 1rem;">
+                            Showing latest 10 of {{ audit_logs.count }} audit logs
+                        </p>
+                    {% endif %}
+                {% else %}
+                    <div class="empty-state">
+                        No audit logs yet
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</body>
+</html>

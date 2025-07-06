@@ -37,14 +37,26 @@ pipx install -e .
 
 ### Examples
 
-```
-$ pysec audit config
+```bash
+# Audit system configuration
+$ python -m pysec audit config
 Running system configuration audit...
 - Found checker: UbuntuSecurityChecker
 - Installed packages: 3865
 ✗ Disk is NOT encrypted
 ✓ Screen locks after 15 minutes
 ✓ Automatic daily updates are enabled
+
+# Start the server for client management
+$ python -m pysec server start
+Starting pysec Django server on 127.0.0.1:8000
+Access the dashboard at: http://127.0.0.1:8000/
+
+# Configure a client to report to server
+$ python -m pysec client configure --server-url http://server:8000 --token TOKEN
+
+# Run client audit and send to server
+$ python -m pysec client run
 ```
 
 

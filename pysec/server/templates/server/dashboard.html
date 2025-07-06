@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PySec Dashboard</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            background-color: #f8f9fa;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 1.5rem;
+        }
+        .logout-btn {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            text-decoration: none;
+            transition: background 0.3s;
+        }
+        .logout-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 0.5rem;
+        }
+        .clients-table {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        .table-header {
+            background: #667eea;
+            color: white;
+            padding: 1rem 2rem;
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid #e1e5e9;
+        }
+        th {
+            background: #f8f9fa;
+            font-weight: 600;
+        }
+        .status-online {
+            color: #28a745;
+            font-weight: 600;
+        }
+        .status-offline {
+            color: #dc3545;
+            font-weight: 600;
+        }
+        .client-link {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .client-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🔒 PySec Dashboard</h1>
+        <a href="/admin/logout/" class="logout-btn">Logout</a>
+    </div>
+
+    <div class="container">
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-number">{{ clients|length }}</div>
+                <div>Total Clients</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">
+                    {% for client in clients %}
+                        {% if client.last_seen %}{% endif %}
+                    {% endfor %}
+                    {{ clients|length }}
+                </div>
+                <div>Active Today</div>
+            </div>
+        </div>
+
+        <div class="clients-table">
+            <div class="table-header">
+                Registered Clients
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Client Name</th>
+                        <th>Created</th>
+                        <th>Last Seen</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for client in clients %}
+                    <tr>
+                        <td>
+                            <a href="{% url 'server:client_detail' client.pk %}" class="client-link">
+                                {{ client.name }}
+                            </a>
+                        </td>
+                        <td>{{ client.created_at|date:"M d, Y H:i" }}</td>
+                        <td>
+                            {% if client.last_seen %}
+                                {{ client.last_seen|date:"M d, Y H:i" }}
+                            {% else %}
+                                Never
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if client.last_seen %}
+                                <span class="status-online">●</span> Online
+                            {% else %}
+                                <span class="status-offline">●</span> Offline
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" style="text-align: center; color: #6c757d; padding: 2rem;">
+                            No clients registered yet. Use the management command to create a client.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</body>
+</html>

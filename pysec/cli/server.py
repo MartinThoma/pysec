@@ -1,12 +1,23 @@
-"""Server CLI commands for pysec."""
+"""Server CLI commands for pysec (Django version)."""
+
+import subprocess
+import sys
+from pathlib import Path
 
 import typer
 from rich import print
 
-from pysec.config import get_or_create_server_config, get_server_config_file
-from pysec.server.app import start_server
+server_app = typer.Typer(help="Manage pysec Django server")
 
-server_app = typer.Typer(help="Manage pysec server")
+
+def get_project_root() -> Path:
+    """Get the project root directory where manage.py is located."""
+    # Start from the current file and go up to find manage.py
+    current_file = Path(__file__).resolve()
+    for parent in current_file.parents:
+        if (parent / "manage.py").exists():
+            return parent
+    raise FileNotFoundError("Could not find manage.py in parent directories")
 
 
 @server_app.command("start")
@@ -23,28 +34,112 @@ def start_server_cmd(
         "-p",
         help="Port to bind the server to",
     ),
-    reload: bool = typer.Option(
-        False,
-        "--reload",
-        help="Enable auto-reload for development",
-    ),
 ) -> None:
-    """Start the pysec web server."""
-    print(f"[bold cyan]Starting pysec server on {host}:{port}[/bold cyan]")
-    config_file = get_server_config_file()
-    print(f"[yellow]Admin config stored at: {config_file}[/yellow]")
-    print(f"[yellow]Access the dashboard at: http://{host}:{port}[/yellow]")
-    start_server(host=host, port=port, reload=reload)
+    """Start the pysec Django server."""
+    print(f"[bold cyan]Starting pysec Django server on {host}:{port}[/bold cyan]")
+    print(f"[yellow]Access the dashboard at: http://{host}:{port}/[/yellow]")
+    print(f"[yellow]Access the admin at: http://{host}:{port}/admin/[/yellow]")
 
-
-@server_app.command("admin-password")
-def show_admin_password() -> None:
-    """Show the admin password for the dashboard."""
     try:
-        server_config = get_or_create_server_config()
-        config_file = get_server_config_file()
-        print(f"[bold green]Admin password:[/bold green] {server_config.admin_password}")
-        print(f"[dim]Config stored at: {config_file}[/dim]")
-    except Exception as e:
-        print(f"[bold red]Error getting admin password:[/bold red] {e}")
-        typer.Exit(1)
+        project_root = get_project_root()
+        # Use Django's management command from the correct directory
+        subprocess.run(
+            [
+                sys.executable,
+                "manage.py",
+                "runserver",
+                f"{host}:{port}",
+            ],
+            cwd=str(project_root),
+            check=True,
+        )
+    except FileNotFoundError as e:
+        print(f"[red]Error: {e}[/red]")
+        print(
+            "[red]Make sure you're running this from the pysec project directory[/red]",
+        )
+        raise typer.Exit(1) from e
+    except subprocess.CalledProcessError as e:
+        print(f"[red]Error starting server: {e}[/red]")
+        raise typer.Exit(1) from e
+
+
+@server_app.command("create-client")
+def create_client_cmd(
+    name: str = typer.Argument(..., help="Name of the client to create"),
+) -> None:
+    """Create a new client with authentication token."""
+    try:
+        project_root = get_project_root()
+        subprocess.run(
+            [
+                sys.executable,
+                "manage.py",
+                "create_client",
+                name,
+            ],
+            cwd=str(project_root),
+            check=True,
+        )
+    except FileNotFoundError as e:
+        print(f"[red]Error: {e}[/red]")
+        print(
+            "[red]Make sure you're running this from the pysec project directory[/red]",
+        )
+        raise typer.Exit(1) from e
+    except subprocess.CalledProcessError as e:
+        print(f"[red]Error creating client: {e}[/red]")
+        raise typer.Exit(1) from e
+
+
+@server_app.command("migrate")
+def migrate_cmd() -> None:
+    """Run Django database migrations."""
+    print("[bold cyan]Running Django migrations...[/bold cyan]")
+    try:
+        project_root = get_project_root()
+        subprocess.run(
+            [
+                sys.executable,
+                "manage.py",
+                "migrate",
+            ],
+            cwd=str(project_root),
+            check=True,
+        )
+        print("[green]✓ Migrations completed successfully[/green]")
+    except FileNotFoundError as e:
+        print(f"[red]Error: {e}[/red]")
+        print(
+            "[red]Make sure you're running this from the pysec project directory[/red]",
+        )
+        raise typer.Exit(1) from e
+    except subprocess.CalledProcessError as e:
+        print(f"[red]Error running migrations: {e}[/red]")
+        raise typer.Exit(1) from e
+
+
+@server_app.command("createsuperuser")
+def create_superuser_cmd() -> None:
+    """Create Django superuser for admin access."""
+    print("[bold cyan]Creating Django superuser...[/bold cyan]")
+    try:
+        project_root = get_project_root()
+        subprocess.run(
+            [
+                sys.executable,
+                "manage.py",
+                "createsuperuser",
+            ],
+            cwd=str(project_root),
+            check=True,
+        )
+    except FileNotFoundError as e:
+        print(f"[red]Error: {e}[/red]")
+        print(
+            "[red]Make sure you're running this from the pysec project directory[/red]",
+        )
+        raise typer.Exit(1) from e
+    except subprocess.CalledProcessError as e:
+        print(f"[red]Error creating superuser: {e}[/red]")
+        raise typer.Exit(1) from e

@@ -19,9 +19,10 @@ class CveManager:
         if not self.config_dir.exists():
             self.config_dir.mkdir(parents=True)
         self.years = [2023, 2024, 2025]
-        self.cve_data: dict[str, list[tuple[str, str, str, str | None, str | None]]] = (
-            defaultdict(list)
-        )
+        self.cve_data: dict[
+            str,
+            list[tuple[str, str, str, str | None, str | None]],
+        ] = defaultdict(list)
         self._load_or_download()
 
     def _load_or_download(self) -> None:
