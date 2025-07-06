@@ -139,12 +139,30 @@ def test_server_login(test_client: DjangoTestClient, admin_user: User) -> None:
     assert response.status_code == status.HTTP_200_OK
     assert b"PySec" in response.content
 
+    # Test redirect to login
+    response = test_client.get("/")
+    assert response.status_code == status.HTTP_200_OK
+    assert b"Login" in response.content
+
+    # Test POST login with incorrect credentials
+    response = test_client.post(
+        "/login/",
+        data={"username": "admin", "password": "wrongpass"},
+    )
+    assert response.status_code == status.HTTP_200_OK  # Should stay on login page
+    assert b"Login" in response.content
+
     # Test POST login with correct credentials
     response = test_client.post(
         "/login/",
         data={"username": "admin", "password": "testpass123"},
     )
     assert response.status_code == status.HTTP_302_FOUND  # Redirect on successful login
+
+    # Test after already logged in
+    response = test_client.get("/")
+    assert response.status_code == status.HTTP_302_FOUND
+    assert b"Login" not in response.content
 
 
 @pytest.mark.django_db
