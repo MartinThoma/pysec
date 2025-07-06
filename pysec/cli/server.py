@@ -91,11 +91,31 @@ def start_server_cmd(
         raise typer.Exit(1) from e
 
 
-@server_app.command("create-client")
-def create_client_cmd(
-    name: str = typer.Argument(..., help="Name of the client to create"),
+@server_app.command(
+    "manage.py",
+    context_settings={"allow_extra_args": True, "ignore_unknown_options": True},
+)
+def manage_py_cmd(
+    ctx: typer.Context,
 ) -> None:
-    """Create a new client with authentication token."""
+    """Run Django management commands via manage.py."""
+    args = ctx.params.get("args", []) + ctx.args
+
+    if not args:
+        print("[red]Error: No management command provided[/red]")
+        print("[yellow]Usage: pysec server manage.py <command> [args...][/yellow]")
+        print("[yellow]Examples:[/yellow]")
+        print("[yellow]  pysec server manage.py runserver[/yellow]")
+        print("[yellow]  pysec server manage.py runserver 0.0.0.0:8000[/yellow]")
+        print("[yellow]  pysec server manage.py migrate[/yellow]")
+        print("[yellow]  pysec server manage.py migrate --plan[/yellow]")
+        print("[yellow]  pysec server manage.py createsuperuser[/yellow]")
+        print("[yellow]  pysec server manage.py create_client myclient[/yellow]")
+        print("[yellow]  pysec server manage.py collectstatic[/yellow]")
+        print("[yellow]  pysec server manage.py shell[/yellow]")
+        print("[yellow]  pysec server manage.py help[/yellow]")
+        raise typer.Exit(1)
+
     try:
         setup_django()
         project_root = get_project_root()
@@ -103,13 +123,10 @@ def create_client_cmd(
         # Try to use manage.py if it exists (development mode)
         manage_py = project_root / "manage.py"
         if manage_py.exists():
+            cmd = [sys.executable, str(manage_py), *args]
+            print(f"[dim]Running: {' '.join(cmd)}[/dim]")
             subprocess.run(
-                [
-                    sys.executable,
-                    str(manage_py),
-                    "create_client",
-                    name,
-                ],
+                cmd,
                 cwd=str(project_root),
                 check=True,
             )
@@ -122,8 +139,9 @@ def create_client_cmd(
             django.setup()
 
             old_argv = sys.argv
-            sys.argv = ["manage.py", "create_client", name]
+            sys.argv = ["manage.py", *args]
             try:
+                print(f"[dim]Running Django command: {' '.join(sys.argv)}[/dim]")
                 execute_from_command_line(sys.argv)
             finally:
                 sys.argv = old_argv
@@ -133,94 +151,5 @@ def create_client_cmd(
         print("[red]Make sure Django is installed and pysec is properly set up[/red]")
         raise typer.Exit(1) from e
     except subprocess.CalledProcessError as e:
-        print(f"[red]Error creating client: {e}[/red]")
-        raise typer.Exit(1) from e
-
-
-@server_app.command("migrate")
-def migrate_cmd() -> None:
-    """Run Django database migrations."""
-    print("[bold cyan]Running Django migrations...[/bold cyan]")
-    try:
-        setup_django()
-        project_root = get_project_root()
-
-        # Try to use manage.py if it exists (development mode)
-        manage_py = project_root / "manage.py"
-        if manage_py.exists():
-            subprocess.run(
-                [
-                    sys.executable,
-                    str(manage_py),
-                    "migrate",
-                ],
-                cwd=str(project_root),
-                check=True,
-            )
-        else:
-            # Use Django management directly (installed package mode)
-            import django  # noqa: PLC0415
-            from django.core.management import execute_from_command_line  # noqa: PLC0415
-
-            # Initialize Django
-            django.setup()
-
-            old_argv = sys.argv
-            sys.argv = ["manage.py", "migrate"]
-            try:
-                execute_from_command_line(sys.argv)
-            finally:
-                sys.argv = old_argv
-
-        print("[green]✓ Migrations completed successfully[/green]")
-    except ImportError as e:
-        print(f"[red]Error: Could not import Django: {e}[/red]")
-        print("[red]Make sure Django is installed and pysec is properly set up[/red]")
-        raise typer.Exit(1) from e
-    except subprocess.CalledProcessError as e:
-        print(f"[red]Error running migrations: {e}[/red]")
-        raise typer.Exit(1) from e
-
-
-@server_app.command("createsuperuser")
-def create_superuser_cmd() -> None:
-    """Create Django superuser for admin access."""
-    print("[bold cyan]Creating Django superuser...[/bold cyan]")
-    try:
-        setup_django()
-        project_root = get_project_root()
-
-        # Try to use manage.py if it exists (development mode)
-        manage_py = project_root / "manage.py"
-        if manage_py.exists():
-            subprocess.run(
-                [
-                    sys.executable,
-                    str(manage_py),
-                    "createsuperuser",
-                ],
-                cwd=str(project_root),
-                check=True,
-            )
-        else:
-            # Use Django management directly (installed package mode)
-            import django  # noqa: PLC0415
-            from django.core.management import execute_from_command_line  # noqa: PLC0415
-
-            # Initialize Django
-            django.setup()
-
-            old_argv = sys.argv
-            sys.argv = ["manage.py", "createsuperuser"]
-            try:
-                execute_from_command_line(sys.argv)
-            finally:
-                sys.argv = old_argv
-
-    except ImportError as e:
-        print(f"[red]Error: Could not import Django: {e}[/red]")
-        print("[red]Make sure Django is installed and pysec is properly set up[/red]")
-        raise typer.Exit(1) from e
-    except subprocess.CalledProcessError as e:
-        print(f"[red]Error creating superuser: {e}[/red]")
+        print(f"[red]Error running management command: {e}[/red]")
         raise typer.Exit(1) from e

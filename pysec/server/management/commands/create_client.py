@@ -3,8 +3,9 @@
 from argparse import ArgumentParser
 
 from django.core.management.base import BaseCommand
-from server.auth import generate_client_token
-from server.models import Client
+
+from pysec.server.auth import generate_client_token
+from pysec.server.models import Client
 
 
 class Command(BaseCommand):
