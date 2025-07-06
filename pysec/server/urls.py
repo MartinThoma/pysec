@@ -13,23 +13,25 @@ urlpatterns = [
     path("dashboard/", views.dashboard, name="dashboard"),
     path("client/<int:client_id>/", views.client_detail, name="client_detail"),
     # Client API endpoints (with trailing slash)
-    path("api/audit-log/", views.AuditLogAPI.as_view(), name="api_audit_log"),
-    path("api/packages/", views.PackagesAPI.as_view(), name="api_packages_submit"),
+    path("api/audit-log/", views.AuditLogAPIView.as_view(), name="api_audit_log"),
+    path("api/packages/", views.PackagesAPIView.as_view(), name="api_packages_submit"),
     path(
         "api/security-info/",
-        views.SecurityInfoAPI.as_view(),
+        views.SecurityInfoAPIView.as_view(),
         name="api_security_info",
     ),
     # Client API endpoints (without trailing slash for backward compatibility)
-    path("api/audit-log", views.AuditLogAPI.as_view(), name="api_audit_log_no_slash"),
+    path(
+        "api/audit-log", views.AuditLogAPIView.as_view(), name="api_audit_log_no_slash"
+    ),
     path(
         "api/packages",
-        views.PackagesAPI.as_view(),
+        views.PackagesAPIView.as_view(),
         name="api_packages_submit_no_slash",
     ),
     path(
         "api/security-info",
-        views.SecurityInfoAPI.as_view(),
+        views.SecurityInfoAPIView.as_view(),
         name="api_security_info_no_slash",
     ),
     # Admin API endpoints

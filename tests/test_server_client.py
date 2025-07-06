@@ -181,7 +181,7 @@ def test_api_endpoints_require_auth(test_client: DjangoTestClient) -> None:
 
     # Test admin API without login (these require admin login, not client token)
     response = test_client.get("/api/clients/")
-    assert response.status_code == status.HTTP_302_FOUND  # Redirect to login
+    assert response.status_code == status.HTTP_403_FORBIDDEN
 
 
 @pytest.mark.django_db
@@ -191,8 +191,7 @@ def test_api_endpoints_return_json(test_client: DjangoTestClient) -> None:
     response = test_client.get("/api/audit-log/")
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
     assert response.headers.get("content-type") == "application/json"
-    data = response.json()
-    assert "error" in data
+    assert response.json() == {"detail": "Authentication credentials were not provided."}
 
     # Test invalid API endpoint returns Django 404
     response = test_client.get("/api/nonexistent/")
@@ -230,8 +229,7 @@ def test_security_info_endpoint_without_auth(test_client: DjangoTestClient) -> N
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
     # Should return JSON error
     assert response.headers.get("content-type") == "application/json"
-    data = response.json()
-    assert "error" in data
+    assert response.json() == {"detail": "Authentication credentials were not provided."}
 
 
 @pytest.mark.django_db
@@ -259,7 +257,7 @@ def test_security_info_endpoint(
         HTTP_AUTHORIZATION=f"Bearer {TEST_TOKEN_VALUE}",
     )
 
-    assert response.status_code == status.HTTP_200_OK
+    assert response.status_code == status.HTTP_201_CREATED
     response_data = response.json()
     assert response_data["status"] == "success"
 
@@ -290,7 +288,7 @@ def test_audit_log_endpoint(
         HTTP_AUTHORIZATION=f"Bearer {TEST_TOKEN_VALUE}",
     )
 
-    assert response.status_code == status.HTTP_200_OK
+    assert response.status_code == status.HTTP_201_CREATED
     response_data = response.json()
     assert response_data["status"] == "success"
 
@@ -367,7 +365,7 @@ def test_admin_api_clients(test_client: DjangoTestClient, admin_user: User) -> N
         data=json.dumps({"name": "test-client-api"}),
         content_type="application/json",
     )
-    assert response.status_code == status.HTTP_200_OK
+    assert response.status_code == status.HTTP_201_CREATED
     data = response.json()
     assert data["name"] == "test-client-api"
     assert "token" in data

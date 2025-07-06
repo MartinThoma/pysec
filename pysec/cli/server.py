@@ -1,5 +1,6 @@
 """Server CLI commands for pysec (Django version)."""
 
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -10,14 +11,22 @@ from rich import print
 server_app = typer.Typer(help="Manage pysec Django server")
 
 
+def setup_django() -> None:
+    """Set up Django environment."""
+    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "pysec_django.settings")
+
+
 def get_project_root() -> Path:
     """Get the project root directory where manage.py is located."""
-    # Start from the current file and go up to find manage.py
+    # First try to find manage.py in parent directories (for development)
     current_file = Path(__file__).resolve()
     for parent in current_file.parents:
         if (parent / "manage.py").exists():
             return parent
-    raise FileNotFoundError("Could not find manage.py in parent directories")
+
+    # If not found, we're likely running from an installed package
+    # In this case, we'll use the current working directory
+    return Path.cwd()
 
 
 @server_app.command("start")
@@ -41,23 +50,41 @@ def start_server_cmd(
     print(f"[yellow]Access the admin at: http://{host}:{port}/admin/[/yellow]")
 
     try:
+        setup_django()
         project_root = get_project_root()
-        # Use Django's management command from the correct directory
-        subprocess.run(
-            [
-                sys.executable,
-                "manage.py",
-                "runserver",
-                f"{host}:{port}",
-            ],
-            cwd=str(project_root),
-            check=True,
-        )
-    except FileNotFoundError as e:
-        print(f"[red]Error: {e}[/red]")
-        print(
-            "[red]Make sure you're running this from the pysec project directory[/red]",
-        )
+
+        # Try to use manage.py if it exists (development mode)
+        manage_py = project_root / "manage.py"
+        if manage_py.exists():
+            subprocess.run(
+                [
+                    sys.executable,
+                    str(manage_py),
+                    "runserver",
+                    f"{host}:{port}",
+                ],
+                cwd=str(project_root),
+                check=True,
+            )
+        else:
+            # Use Django management directly (installed package mode)
+            import django  # noqa: PLC0415
+            from django.conf import settings  # noqa: PLC0415, F401
+            from django.core.management import execute_from_command_line  # noqa: PLC0415
+
+            # Initialize Django
+            django.setup()
+
+            old_argv = sys.argv
+            sys.argv = ["manage.py", "runserver", f"{host}:{port}"]
+            try:
+                execute_from_command_line(sys.argv)
+            finally:
+                sys.argv = old_argv
+
+    except ImportError as e:
+        print(f"[red]Error: Could not import Django: {e}[/red]")
+        print("[red]Make sure Django is installed and pysec is properly set up[/red]")
         raise typer.Exit(1) from e
     except subprocess.CalledProcessError as e:
         print(f"[red]Error starting server: {e}[/red]")
@@ -70,22 +97,40 @@ def create_client_cmd(
 ) -> None:
     """Create a new client with authentication token."""
     try:
+        setup_django()
         project_root = get_project_root()
-        subprocess.run(
-            [
-                sys.executable,
-                "manage.py",
-                "create_client",
-                name,
-            ],
-            cwd=str(project_root),
-            check=True,
-        )
-    except FileNotFoundError as e:
-        print(f"[red]Error: {e}[/red]")
-        print(
-            "[red]Make sure you're running this from the pysec project directory[/red]",
-        )
+
+        # Try to use manage.py if it exists (development mode)
+        manage_py = project_root / "manage.py"
+        if manage_py.exists():
+            subprocess.run(
+                [
+                    sys.executable,
+                    str(manage_py),
+                    "create_client",
+                    name,
+                ],
+                cwd=str(project_root),
+                check=True,
+            )
+        else:
+            # Use Django management directly (installed package mode)
+            import django  # noqa: PLC0415
+            from django.core.management import execute_from_command_line  # noqa: PLC0415
+
+            # Initialize Django
+            django.setup()
+
+            old_argv = sys.argv
+            sys.argv = ["manage.py", "create_client", name]
+            try:
+                execute_from_command_line(sys.argv)
+            finally:
+                sys.argv = old_argv
+
+    except ImportError as e:
+        print(f"[red]Error: Could not import Django: {e}[/red]")
+        print("[red]Make sure Django is installed and pysec is properly set up[/red]")
         raise typer.Exit(1) from e
     except subprocess.CalledProcessError as e:
         print(f"[red]Error creating client: {e}[/red]")
@@ -97,22 +142,40 @@ def migrate_cmd() -> None:
     """Run Django database migrations."""
     print("[bold cyan]Running Django migrations...[/bold cyan]")
     try:
+        setup_django()
         project_root = get_project_root()
-        subprocess.run(
-            [
-                sys.executable,
-                "manage.py",
-                "migrate",
-            ],
-            cwd=str(project_root),
-            check=True,
-        )
+
+        # Try to use manage.py if it exists (development mode)
+        manage_py = project_root / "manage.py"
+        if manage_py.exists():
+            subprocess.run(
+                [
+                    sys.executable,
+                    str(manage_py),
+                    "migrate",
+                ],
+                cwd=str(project_root),
+                check=True,
+            )
+        else:
+            # Use Django management directly (installed package mode)
+            import django  # noqa: PLC0415
+            from django.core.management import execute_from_command_line  # noqa: PLC0415
+
+            # Initialize Django
+            django.setup()
+
+            old_argv = sys.argv
+            sys.argv = ["manage.py", "migrate"]
+            try:
+                execute_from_command_line(sys.argv)
+            finally:
+                sys.argv = old_argv
+
         print("[green]✓ Migrations completed successfully[/green]")
-    except FileNotFoundError as e:
-        print(f"[red]Error: {e}[/red]")
-        print(
-            "[red]Make sure you're running this from the pysec project directory[/red]",
-        )
+    except ImportError as e:
+        print(f"[red]Error: Could not import Django: {e}[/red]")
+        print("[red]Make sure Django is installed and pysec is properly set up[/red]")
         raise typer.Exit(1) from e
     except subprocess.CalledProcessError as e:
         print(f"[red]Error running migrations: {e}[/red]")
@@ -124,21 +187,39 @@ def create_superuser_cmd() -> None:
     """Create Django superuser for admin access."""
     print("[bold cyan]Creating Django superuser...[/bold cyan]")
     try:
+        setup_django()
         project_root = get_project_root()
-        subprocess.run(
-            [
-                sys.executable,
-                "manage.py",
-                "createsuperuser",
-            ],
-            cwd=str(project_root),
-            check=True,
-        )
-    except FileNotFoundError as e:
-        print(f"[red]Error: {e}[/red]")
-        print(
-            "[red]Make sure you're running this from the pysec project directory[/red]",
-        )
+
+        # Try to use manage.py if it exists (development mode)
+        manage_py = project_root / "manage.py"
+        if manage_py.exists():
+            subprocess.run(
+                [
+                    sys.executable,
+                    str(manage_py),
+                    "createsuperuser",
+                ],
+                cwd=str(project_root),
+                check=True,
+            )
+        else:
+            # Use Django management directly (installed package mode)
+            import django  # noqa: PLC0415
+            from django.core.management import execute_from_command_line  # noqa: PLC0415
+
+            # Initialize Django
+            django.setup()
+
+            old_argv = sys.argv
+            sys.argv = ["manage.py", "createsuperuser"]
+            try:
+                execute_from_command_line(sys.argv)
+            finally:
+                sys.argv = old_argv
+
+    except ImportError as e:
+        print(f"[red]Error: Could not import Django: {e}[/red]")
+        print("[red]Make sure Django is installed and pysec is properly set up[/red]")
         raise typer.Exit(1) from e
     except subprocess.CalledProcessError as e:
         print(f"[red]Error creating superuser: {e}[/red]")

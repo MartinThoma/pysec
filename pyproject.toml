@@ -52,6 +52,7 @@ ignore = [
     "D102",  # Missing docstring in public method
     "D104", #  Missing docstring in public package
     "D105",  # Missing docstring in magic method"
+    "D107",  # Missing docstring in `__init__` - I prefer documenting the class
     "D203",  # `incorrect-blank-line-before-class`
     "D212",    # I want multiline-docstrings to start at the second line
     "D401", # First line of docstring should be in imperative mood
@@ -87,6 +88,9 @@ ignore = [
     "S106",  # Possible hardcoded password
 ]
 "pysec/server/models.py" = [
+    "D106",  # Missing docstring in public nested class
+]
+"pysec/server/serializers.py" = [
     "D106",  # Missing docstring in public nested class
 ]
 "pysec/server/auth.py" = [
