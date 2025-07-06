@@ -5,7 +5,7 @@ from rich.table import Table
 
 from pysec import SeverityLevel
 from pysec.cve_manager import CveManager
-from pysec.oschecks import get_checker
+from pysec.package_repositories import get_all_installed_packages
 
 
 def get_keep_severity(min_severity: SeverityLevel) -> list[str]:
@@ -24,15 +24,32 @@ def get_keep_severity(min_severity: SeverityLevel) -> list[str]:
 
 def audit_installed_packages(verbosity: int, min_severity: SeverityLevel) -> None:
     """Check installed packages for known CVEs."""
-    checker = get_checker()
+    print("Collecting installed packages from all repositories...")
 
-    if not checker:
-        print("[red]✗ No supported OS checker found[/red]")
-        return
+    try:
+        repo_packages = get_all_installed_packages()
 
-    installed_packages = checker.get_installed_packages()
-    if not installed_packages:
-        print("[yellow]No packages found.[/yellow]")
+        # Flatten packages from all repositories
+        installed_packages: list[dict[str, str]] = []
+        for packages in repo_packages.values():
+            installed_packages.extend(
+                {
+                    "name": package["name"],
+                    "version": package["version"],
+                    "repository": package.get("repository_type", "unknown"),
+                }
+                for package in packages
+                if "name" in package and "version" in package
+            )
+
+        if not installed_packages:
+            print("[yellow]No packages found.[/yellow]")
+            return
+
+        print(f"Found {len(installed_packages)} packages across all repositories")
+
+    except Exception as e:
+        print(f"[red]✗ Failed to collect packages: {e}[/red]")
         return
 
     try:
@@ -46,15 +63,17 @@ def audit_installed_packages(verbosity: int, min_severity: SeverityLevel) -> Non
     results = []
     for pkg_dict in installed_packages:
         pkg_name, version = pkg_dict["name"], pkg_dict["version"]
+        pkg_repo = pkg_dict.get("repository", "unknown")
         cves = cve_manager.get_cves(pkg_name, version)
         cves = [
             (cve_desc[0], cve_desc[1], cve_desc[2])
             for cve_desc in cves
             if cve_desc[2] in keep_severity
         ]
-        results.append((pkg_name, version, cves))
+        results.append((pkg_name, version, cves, pkg_repo))
 
     table = Table(title="Installed Packages with CVEs")
+    table.add_column("Repo")
     table.add_column("Package")
     table.add_column("Version")
     table.add_column("CVEs", justify="left")
@@ -77,6 +96,6 @@ def audit_installed_packages(verbosity: int, min_severity: SeverityLevel) -> Non
                         for cve_desc in pkg[2]
                     ],
                 )
-            table.add_row(pkg[0], pkg[1], cve_str)
+            table.add_row(pkg[3], pkg[0], pkg[1], cve_str)
 
     print(table)

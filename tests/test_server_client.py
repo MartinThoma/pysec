@@ -306,8 +306,8 @@ def test_packages_endpoint(
     """Test packages submission endpoint."""
     packages_data = {
         "packages": [
-            {"name": "requests", "version": "2.25.1"},
-            {"name": "django", "version": "4.2.0"},
+            {"name": "requests", "version": "2.25.1", "package_repository": "pypi"},
+            {"name": "django", "version": "4.2.0", "package_repository": "apt"},
         ],
     }
 
@@ -318,7 +318,7 @@ def test_packages_endpoint(
         HTTP_AUTHORIZATION=f"Bearer {TEST_TOKEN_VALUE}",
     )
 
-    assert response.status_code == status.HTTP_200_OK
+    assert response.status_code == status.HTTP_200_OK, response.json()
     response_data = response.json()
     assert response_data["status"] == "success"
 

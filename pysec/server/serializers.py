@@ -56,7 +56,14 @@ class PackageSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Package
-        fields = ["id", "client_id", "name", "version", "submitted_at"]
+        fields = [
+            "id",
+            "client_id",
+            "name",
+            "version",
+            "package_repository",
+            "submitted_at",
+        ]
         read_only_fields = ["id", "client_id", "submitted_at"]
 
 
@@ -74,9 +81,14 @@ class PackagesListSerializer(serializers.Serializer):
     def validate_packages(self, value: list[dict[str, str]]) -> list[dict[str, str]]:
         """Validate package list structure."""
         for pkg in value:
-            if "name" not in pkg or "version" not in pkg:
+            if (
+                "name" not in pkg
+                or "version" not in pkg
+                or "package_repository" not in pkg
+            ):
                 raise serializers.ValidationError(
-                    "Each package must have 'name' and 'version' fields"
+                    "Each package must have 'name', 'version', "
+                    "and 'package_repository' fields"
                 )
         return value
 
@@ -94,6 +106,7 @@ class PackagesListSerializer(serializers.Serializer):
                 client=client,
                 name=pkg["name"],
                 version=pkg["version"],
+                package_repository=pkg["package_repository"],
             )
             for pkg in packages
         ]

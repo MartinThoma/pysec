@@ -6,6 +6,8 @@ import string
 from django.db import models
 from django.utils import timezone
 
+from .choices import PackageRepository
+
 
 def generate_client_token() -> str:
     """Generate a secure random token for client authentication."""
@@ -56,6 +58,10 @@ class Package(models.Model):
     client = models.ForeignKey(Client, on_delete=models.CASCADE)
     name = models.CharField(max_length=255)
     version = models.CharField(max_length=255)
+    package_repository = models.CharField(
+        max_length=20,
+        choices=PackageRepository.choices,
+    )
     submitted_at = models.DateTimeField(default=timezone.now)
 
     class Meta:
@@ -63,7 +69,7 @@ class Package(models.Model):
         ordering = ("name",)
 
     def __str__(self) -> str:
-        return f"{self.name} {self.version}"
+        return f"{self.name} {self.version} ({self.package_repository})"
 
 
 class SecurityInfo(models.Model):

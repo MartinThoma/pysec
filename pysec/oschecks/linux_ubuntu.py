@@ -22,44 +22,6 @@ class UbuntuSecurityChecker(BaseSecurityChecker):
             pass
         return False
 
-    def get_installed_packages(self) -> list[dict[str, str]]:
-        packages = []
-
-        # APT packages (dpkg)
-        try:
-            result = subprocess.run(
-                ["dpkg-query", "-W", "-f=${Package}\t${Version}\n"],
-                capture_output=True,
-                text=True,
-                check=True,
-            )
-            for line in result.stdout.strip().splitlines():
-                name, version = line.strip().split("\t")
-                if "snap" in version.lower():
-                    continue
-                packages.append({"name": name, "version": version})
-        except subprocess.CalledProcessError:
-            logger.exception("Failed to list APT packages")
-
-        # Snap packages
-        try:
-            result = subprocess.run(
-                ["snap", "list"],
-                capture_output=True,
-                text=True,
-                check=True,
-            )
-            lines = result.stdout.strip().splitlines()
-            for line in lines[1:]:  # Skip header
-                parts = line.split()
-                if len(parts) >= 2:  # noqa: PLR2004
-                    name, version = parts[0], parts[1]
-                    packages.append({"name": name, "version": version})
-        except subprocess.CalledProcessError:
-            logger.exception("Failed to list Snap packages")
-
-        return packages
-
     def get_audit_events(self) -> list[dict[str, str]]:
         """Get audit events from Ubuntu system."""
         events = []

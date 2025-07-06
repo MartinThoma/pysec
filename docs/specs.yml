@@ -325,6 +325,8 @@ components:
         version:
           type: string
           maxLength: 255
+        package_repository:
+          $ref: '#/components/schemas/PackageRepositoryEnum'
         submitted_at:
           type: string
           format: date-time
@@ -333,8 +335,17 @@ components:
       - client_id
       - id
       - name
+      - package_repository
       - submitted_at
       - version
+    PackageRepositoryEnum:
+      enum:
+      - DEBIAN_APT
+      - PYTHON_PIP
+      type: string
+      description: |-
+        * `DEBIAN_APT` - Debian/Ubuntu APT
+        * `PYTHON_PIP` - Python pip
     PackagesListRequest:
       type: object
       description: Serializer for bulk package creation.

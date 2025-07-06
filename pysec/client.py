@@ -11,6 +11,7 @@ from rich import print
 
 from pysec.config import ensure_directory, get_client_config_file
 from pysec.oschecks import get_checker
+from pysec.package_repositories import get_all_installed_packages
 
 
 class ClientConfig(BaseModel):
@@ -48,33 +49,63 @@ class ClientConfig(BaseModel):
 
 
 def get_installed_packages() -> list[dict[str, str]]:
-    """Get list of installed packages and their versions using OS-specific checker."""
-    checker = get_checker()
-    if checker:
-        try:
-            return checker.get_installed_packages()
-        except Exception as e:
-            print(
-                f"[yellow]Warning: OS-specific package collection failed: {e}[/yellow]",
-            )
+    """Get list of installed packages with repository information."""
+    all_packages = []
 
-    # Fallback to basic pip packages if OS checker is not available
-    packages = []
     try:
-        result = subprocess.run(
-            [sys.executable, "-m", "pip", "list", "--format=json"],
-            capture_output=True,
-            text=True,
-            check=True,
-        )
-        pip_packages = json.loads(result.stdout)
-        packages.extend(
-            [{"name": pkg["name"], "version": pkg["version"]} for pkg in pip_packages],
-        )
-    except (subprocess.CalledProcessError, json.JSONDecodeError):
-        print("[yellow]Warning: Could not get pip packages[/yellow]")
+        # Use the new repository system to get packages with proper repository types
+        repo_packages = get_all_installed_packages()
 
-    return packages
+        for packages in repo_packages.values():
+            for package in packages:
+                # Ensure the package has the required fields
+                if (
+                    "name" in package
+                    and "version" in package
+                    and "repository_type" in package
+                ):
+                    all_packages.append(
+                        {
+                            "name": package["name"],
+                            "version": package["version"],
+                            "package_repository": package["repository_type"],
+                        }
+                    )
+                else:
+                    print(
+                        f"[yellow]Warning: Skipping malformed package: "
+                        f"{package}[/yellow]"
+                    )
+
+        return all_packages
+
+    except Exception as e:
+        print(f"[yellow]Warning: Repository package collection failed: {e}[/yellow]")
+
+        # Final fallback to basic pip packages if repository system fails
+        packages = []
+        try:
+            result = subprocess.run(
+                [sys.executable, "-m", "pip", "list", "--format=json"],
+                capture_output=True,
+                text=True,
+                check=True,
+            )
+            pip_packages = json.loads(result.stdout)
+            packages.extend(
+                [
+                    {
+                        "name": pkg["name"],
+                        "version": pkg["version"],
+                        "package_repository": "PYTHON_PIP",
+                    }
+                    for pkg in pip_packages
+                ]
+            )
+        except (subprocess.CalledProcessError, json.JSONDecodeError):
+            print("[yellow]Warning: Could not get pip packages[/yellow]")
+
+        return packages
 
 
 def get_audit_events() -> list[dict[str, str]]:
@@ -112,7 +143,7 @@ class PysecClient:
                     "event": event["event"],
                 }
                 response = requests.post(
-                    f"{self.server_url}/api/audit-log",
+                    f"{self.server_url}/api/audit-log/",
                     headers=self.headers,
                     json=data,
                     timeout=30,
@@ -128,7 +159,7 @@ class PysecClient:
         try:
             data = {"packages": packages}
             response = requests.post(
-                f"{self.server_url}/api/packages",
+                f"{self.server_url}/api/packages/",
                 headers=self.headers,
                 json=data,
                 timeout=30,
@@ -168,7 +199,7 @@ class PysecClient:
         """Submit security information to server."""
         try:
             response = requests.post(
-                f"{self.server_url}/api/security-info",
+                f"{self.server_url}/api/security-info/",
                 headers=self.headers,
                 json=security_info,
                 timeout=30,

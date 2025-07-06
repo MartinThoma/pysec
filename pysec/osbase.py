@@ -11,14 +11,6 @@ class BaseSecurityChecker(ABC):
         """Check if the current OS matches the implementation."""
 
     @abstractmethod
-    def get_installed_packages(self) -> list[dict[str, str]]:
-        """
-        Return a list of installed packages with their versions.
-
-        Example: [{ "name": "openssl", "version": "1.1.1" }, ...].
-        """
-
-    @abstractmethod
     def get_audit_events(self) -> list[dict[str, str]]:
         """
         Return a list of recent audit events from the system.

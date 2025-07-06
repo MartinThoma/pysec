@@ -67,10 +67,20 @@ class AuditLogAdmin(admin.ModelAdmin):
 class PackageAdmin(admin.ModelAdmin):
     """Admin interface for Package model."""
 
-    list_display = ["name", "version", "client", "submitted_at"]
-    list_filter = ["submitted_at", "client"]
+    list_display = ["client", "package_repository", "name", "version", "submitted_at"]
+    list_filter = ["submitted_at", "client", "package_repository"]
     search_fields = ["name", "version", "client__name"]
     readonly_fields = ["submitted_at"]
+    fieldsets = [
+        (None, {"fields": ["client", "package_repository", "name", "version"]}),
+        (
+            "Metadata",
+            {
+                "fields": ["submitted_at"],
+                "classes": ["collapse"],
+            },
+        ),
+    ]
 
 
 @admin.register(SecurityInfo)

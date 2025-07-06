@@ -5,6 +5,7 @@ import platform
 from rich import print
 
 from pysec.oschecks import get_checker
+from pysec.package_repositories import get_all_installed_packages
 
 
 def check_config() -> None:
@@ -17,7 +18,19 @@ def check_config() -> None:
 
     print(f"- Found checker: {checker.__class__.__name__}")
 
-    print("- Installed packages:", len(checker.get_installed_packages()))
+    # Get package count from new repository system
+    try:
+        repo_packages = get_all_installed_packages()
+        total_packages = sum(len(packages) for packages in repo_packages.values())
+        print(
+            f"- Installed packages: {total_packages} across "
+            f"{len(repo_packages)} repository types"
+        )
+        for repo_type, packages in repo_packages.items():
+            print(f"  - {repo_type}: {len(packages)} packages")
+    except Exception as e:
+        print(f"[yellow]Warning: Failed to get package count: {e}[/yellow]")
+        print("- Installed packages: Unable to determine")
 
     if checker.is_disk_encrypted():
         print("[green]✓ Disk is encrypted[/green]")

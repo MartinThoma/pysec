@@ -20,25 +20,6 @@ class MacSecurityChecker(BaseSecurityChecker):
         except Exception:
             return False
 
-    def get_installed_packages(self) -> list[dict[str, str]]:
-        try:
-            result = subprocess.run(
-                ["brew", "list", "--versions"],
-                capture_output=True,
-                text=True,
-                check=True,
-            )
-            packages = []
-            for line in result.stdout.strip().splitlines():
-                parts = line.strip().split()
-                if len(parts) >= 2:  # noqa: PLR2004
-                    name = parts[0]
-                    version = parts[1]
-                    packages.append({"name": name, "version": version})
-            return packages
-        except subprocess.CalledProcessError:
-            return []
-
     def get_audit_events(self) -> list[dict[str, str]]:
         """Get audit events from macOS system."""
         events = []

@@ -13,14 +13,6 @@ class ArchLinuxSecurityChecker(BaseSecurityChecker):
     def is_current_os() -> bool:
         return Path("/etc/arch-release").exists()
 
-    def get_installed_packages(self) -> list[dict[str, str]]:
-        output = subprocess.check_output(["pacman", "-Q"], text=True)
-        packages = []
-        for line in output.strip().split("\n"):
-            name, version = line.strip().split(" ", 1)
-            packages.append({"name": name, "version": version})
-        return packages
-
     def get_audit_events(self) -> list[dict[str, str]]:
         """Get audit events from Arch Linux system."""
         events = []
