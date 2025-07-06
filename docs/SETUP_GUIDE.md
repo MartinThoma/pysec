@@ -14,7 +14,26 @@ cd /path/to/pysec
 pip install -e .
 ```
 
-### Step 2: Start the Server
+### Step 2: Initialize the Database
+
+Before starting the server for the first time, you need to set up the database:
+
+```bash
+# Apply database migrations
+pysec server migrate
+
+# Create a superuser account for admin access
+pysec server createsuperuser
+```
+
+You'll be prompted to enter:
+- Username
+- Email address (optional)
+- Password
+
+**Note**: Remember these credentials - you'll need them to log into the dashboard.
+
+### Step 3: Start the Server
 
 ```bash
 # Start the server (will run on http://127.0.0.1:8000)
@@ -24,14 +43,14 @@ pysec server start
 The server will display:
 - Server URL: http://127.0.0.1:8000
 
-### Step 3: Access the Dashboard
+### Step 4: Access the Dashboard
 
 1. Open http://127.0.0.1:8000 in your browser
-2. Login
+2. Login with the superuser credentials you created in Step 2
 3. Click "Add New Client" to create a client
 4. Copy the generated token
 
-### Step 4: Configure a Client
+### Step 5: Configure a Client
 
 On any machine you want to monitor:
 
@@ -42,7 +61,7 @@ pysec client configure \
   --token YOUR_GENERATED_TOKEN
 ```
 
-### Step 5: Run Client Audit
+### Step 6: Run Client Audit
 
 ```bash
 # Run the audit and send data to server
@@ -53,6 +72,10 @@ pysec client run
 
 ### Server Commands
 ```bash
+# Initialize database (run once before first start)
+pysec server migrate
+pysec server createsuperuser
+
 # Start server with custom settings
 pysec server start --host 0.0.0.0 --port 8080
 
