@@ -16,3 +16,4 @@ class PackageRepository(models.TextChoices):
     SNAP = "SNAP", "Snap packages"
     HOMEBREW = "HOMEBREW", "Homebrew (macOS)"
     ARCH_PACMAN = "ARCH_PACMAN", "Arch Linux Pacman"
+    DOCKER = "DOCKER", "Docker images/containers"

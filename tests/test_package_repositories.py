@@ -1,5 +1,6 @@
 """Tests for package repository checkers."""
 
+import subprocess
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -7,6 +8,7 @@ import pytest
 from pysec.client import get_installed_packages
 from pysec.package_repositories import (
     AptPackageRepository,
+    DockerPackageRepository,
     PackageRepositoryChecker,
     PythonPackageRepository,
     get_available_repositories,
@@ -62,14 +64,17 @@ class TestPackageRepositoryChecker:
         # Test that constants are defined
         assert hasattr(AptPackageRepository, "REPOSITORY_TYPE")
         assert hasattr(PythonPackageRepository, "REPOSITORY_TYPE")
+        assert hasattr(DockerPackageRepository, "REPOSITORY_TYPE")
 
         # Test constant values
         assert AptPackageRepository.REPOSITORY_TYPE == "DEBIAN_APT"
         assert PythonPackageRepository.REPOSITORY_TYPE == "PYTHON_PIP"
+        assert DockerPackageRepository.REPOSITORY_TYPE == "DOCKER"
 
         # Test classmethod
         assert AptPackageRepository.get_repository_type() == "DEBIAN_APT"
         assert PythonPackageRepository.get_repository_type() == "PYTHON_PIP"
+        assert DockerPackageRepository.get_repository_type() == "DOCKER"
 
 
 class TestAptPackageRepository:
@@ -153,6 +158,7 @@ class TestUtilityFunctions:
 
     @patch("pysec.package_repositories.utils.PacmanPackageRepository")
     @patch("pysec.package_repositories.utils.HomebrewPackageRepository")
+    @patch("pysec.package_repositories.utils.DockerPackageRepository")
     @patch("pysec.package_repositories.utils.SnapPackageRepository")
     @patch("pysec.package_repositories.utils.AptPackageRepository")
     @patch("pysec.package_repositories.utils.PythonPackageRepository")
@@ -161,6 +167,7 @@ class TestUtilityFunctions:
         mock_python_repo,
         mock_apt_repo,
         mock_snap_repo,
+        mock_docker_repo,
         mock_homebrew_repo,
         mock_pacman_repo,
     ) -> None:
@@ -178,6 +185,10 @@ class TestUtilityFunctions:
         mock_snap_instance.is_available.return_value = False
         mock_snap_repo.return_value = mock_snap_instance
 
+        mock_docker_instance = MagicMock()
+        mock_docker_instance.is_available.return_value = False
+        mock_docker_repo.return_value = mock_docker_instance
+
         mock_homebrew_instance = MagicMock()
         mock_homebrew_instance.is_available.return_value = False
         mock_homebrew_repo.return_value = mock_homebrew_instance
@@ -191,6 +202,7 @@ class TestUtilityFunctions:
 
     @patch("pysec.package_repositories.utils.PacmanPackageRepository")
     @patch("pysec.package_repositories.utils.HomebrewPackageRepository")
+    @patch("pysec.package_repositories.utils.DockerPackageRepository")
     @patch("pysec.package_repositories.utils.SnapPackageRepository")
     @patch("pysec.package_repositories.utils.AptPackageRepository")
     @patch("pysec.package_repositories.utils.PythonPackageRepository")
@@ -199,6 +211,7 @@ class TestUtilityFunctions:
         mock_python_repo,
         mock_apt_repo,
         mock_snap_repo,
+        mock_docker_repo,
         mock_homebrew_repo,
         mock_pacman_repo,
     ) -> None:
@@ -215,6 +228,10 @@ class TestUtilityFunctions:
         mock_snap_instance = MagicMock()
         mock_snap_instance.is_available.return_value = False
         mock_snap_repo.return_value = mock_snap_instance
+
+        mock_docker_instance = MagicMock()
+        mock_docker_instance.is_available.return_value = False
+        mock_docker_repo.return_value = mock_docker_instance
 
         mock_homebrew_instance = MagicMock()
         mock_homebrew_instance.is_available.return_value = False
@@ -324,3 +341,240 @@ class TestClientPackageSubmission:
             assert "name" in pkg
             assert "version" in pkg
             assert "package_repository" in pkg
+
+
+class TestDockerPackageRepository:
+    """Test Docker package repository implementation."""
+
+    @patch("subprocess.run")
+    @patch("shutil.which")
+    def test_is_available_with_docker(self, mock_which, mock_subprocess) -> None:
+        """Test availability when docker is present and running."""
+        mock_which.return_value = "/usr/bin/docker"
+        mock_subprocess.return_value.returncode = 0
+
+        repo = DockerPackageRepository()
+        assert repo.is_available() is True
+
+        # Verify the correct command was called
+        mock_subprocess.assert_called_once_with(
+            ["docker", "version", "--format", "json"],
+            capture_output=True,
+            text=True,
+            check=False,
+            timeout=5,
+        )
+
+    @patch("shutil.which")
+    def test_is_not_available_no_binary(self, mock_which) -> None:
+        """Test when Docker binary is not available."""
+        mock_which.return_value = None
+
+        repo = DockerPackageRepository()
+        assert repo.is_available() is False
+
+    @patch("subprocess.run")
+    @patch("shutil.which")
+    def test_is_not_available_daemon_not_running(
+        self, mock_which, mock_subprocess
+    ) -> None:
+        """Test when Docker is installed but daemon is not running."""
+        mock_which.return_value = "/usr/bin/docker"
+        mock_subprocess.return_value.returncode = 1
+
+        repo = DockerPackageRepository()
+        assert repo.is_available() is False
+
+    @patch("subprocess.run")
+    @patch("shutil.which")
+    def test_is_not_available_timeout(self, mock_which, mock_subprocess) -> None:
+        """Test when Docker command times out."""
+        mock_which.return_value = "/usr/bin/docker"
+        mock_subprocess.side_effect = subprocess.TimeoutExpired("docker", 5)
+
+        repo = DockerPackageRepository()
+        assert repo.is_available() is False
+
+    @patch("subprocess.run")
+    @patch("shutil.which")
+    def test_get_packages_when_not_available(self, mock_which, mock_subprocess) -> None:  # noqa: ARG002
+        """Test error when trying to get packages without Docker."""
+        mock_which.return_value = None
+
+        repo = DockerPackageRepository()
+        with pytest.raises(RuntimeError, match="Docker is not available"):
+            repo.get_installed_packages()
+
+    @patch("subprocess.run")
+    def test_get_installed_packages_success(self, mock_subprocess) -> None:
+        """Test successful retrieval of Docker images and containers."""
+        # Mock Docker images output
+        mock_images_output = (
+            '{"Repository":"nginx","Tag":"latest","ID":"abc123","Size":"142MB",'
+            '"CreatedSince":"2 days ago"}\n'
+            '{"Repository":"postgres","Tag":"13","ID":"def456","Size":"314MB",'
+            '"CreatedSince":"1 week ago"}'
+        )
+
+        # Mock Docker containers output
+        mock_containers_output = (
+            '{"Names":"web-server","Image":"nginx:latest","ID":"container1",'
+            '"Status":"Up 2 hours","CreatedAt":"2023-01-01 10:00:00"}\n'
+            '{"Names":"database","Image":"postgres:13","ID":"container2",'
+            '"Status":"Exited (0) 1 hour ago","CreatedAt":"2023-01-01 09:00:00"}'
+        )
+
+        def subprocess_side_effect(*args, **kwargs) -> None:
+            command = args[0]
+            mock_result = MagicMock()
+            mock_result.returncode = 0
+
+            if command[1] == "images":
+                mock_result.stdout = mock_images_output
+            elif command[1] == "ps":
+                mock_result.stdout = mock_containers_output
+            elif command[1] == "version":
+                mock_result.returncode = 0
+
+            return mock_result
+
+        mock_subprocess.side_effect = subprocess_side_effect
+
+        repo = DockerPackageRepository()
+        packages = repo.get_installed_packages()
+
+        # Should have 4 items total (2 images + 2 containers)
+        assert len(packages) == 4  # noqa: PLR2004
+
+        # Check images
+        nginx_image = next(
+            (p for p in packages if p["name"] == "nginx" and p["type"] == "image"),
+            None,
+        )
+        assert nginx_image is not None
+        assert nginx_image["version"] == "latest"
+        assert nginx_image["size"] == "142MB"
+
+        # Check containers
+        web_container = next(
+            (
+                p
+                for p in packages
+                if p["name"] == "web-server" and p["type"] == "container"
+            ),
+            None,
+        )
+        assert web_container is not None
+        assert web_container["version"] == "nginx:latest"
+        assert web_container["status"] == "Up 2 hours"
+
+    @patch("subprocess.run")
+    def test_get_package_info_image(self, mock_subprocess) -> None:
+        """Test getting detailed info for a Docker image."""
+        mock_inspect_output = """[{
+            "Id": "sha256:abc123",
+            "Created": "2023-01-01T10:00:00Z",
+            "Architecture": "amd64",
+            "Os": "linux",
+            "Size": 142000000,
+            "Config": {
+                "Labels": {"maintainer": "nginx"},
+                "ExposedPorts": {"80/tcp": {}, "443/tcp": {}}
+            }
+        }]"""
+
+        def subprocess_side_effect(*args, **kwargs) -> None:
+            command = args[0]
+            mock_result = MagicMock()
+
+            if command[1] == "version":
+                mock_result.returncode = 0
+            elif command[1] == "image" and command[2] == "inspect":
+                mock_result.returncode = 0
+                mock_result.stdout = mock_inspect_output
+            else:
+                mock_result.returncode = 1
+
+            return mock_result
+
+        mock_subprocess.side_effect = subprocess_side_effect
+
+        repo = DockerPackageRepository()
+        info = repo.get_package_info("nginx:latest")
+
+        assert info is not None
+        assert info["name"] == "nginx:latest"
+        assert info["type"] == "image"
+        assert info["architecture"] == "amd64"
+        assert info["os"] == "linux"
+        assert "80/tcp" in info["exposed_ports"]
+
+    @patch("subprocess.run")
+    def test_get_package_info_container(self, mock_subprocess) -> None:
+        """Test getting detailed info for a Docker container."""
+        mock_inspect_output = """[{
+            "Id": "container123",
+            "Created": "2023-01-01T10:00:00Z",
+            "Config": {"Image": "nginx:latest"},
+            "State": {
+                "Status": "running",
+                "Running": true,
+                "RestartCount": 0
+            },
+            "Platform": "linux"
+        }]"""
+
+        def subprocess_side_effect(*args, **kwargs) -> None:
+            command = args[0]
+            mock_result = MagicMock()
+
+            if command[1] == "version":
+                mock_result.returncode = 0
+            elif command[1] == "image":
+                mock_result.returncode = 1  # Image inspect fails
+                # Set stdout to empty string to avoid JSON decode error
+                mock_result.stdout = ""
+            elif command[1] == "container" and command[2] == "inspect":
+                mock_result.returncode = 0
+                mock_result.stdout = mock_inspect_output
+            else:
+                mock_result.returncode = 1
+                mock_result.stdout = ""
+
+            return mock_result
+
+        mock_subprocess.side_effect = subprocess_side_effect
+
+        repo = DockerPackageRepository()
+        info = repo.get_package_info("web-server")
+
+        assert info is not None
+        assert info["name"] == "web-server"
+        assert info["type"] == "container"
+        assert info["image"] == "nginx:latest"
+        assert info["status"] == "running"
+        assert info["running"] == "True"
+
+    @patch("subprocess.run")
+    def test_get_package_info_not_found(self, mock_subprocess) -> None:
+        """Test getting info for non-existent package."""
+
+        def subprocess_side_effect(*args, **kwargs) -> None:
+            command = args[0]
+            mock_result = MagicMock()
+
+            if command[1] == "version":
+                mock_result.returncode = 0
+                mock_result.stdout = ""
+            else:
+                mock_result.returncode = 1  # All other commands fail
+                mock_result.stdout = ""
+
+            return mock_result
+
+        mock_subprocess.side_effect = subprocess_side_effect
+
+        repo = DockerPackageRepository()
+        info = repo.get_package_info("non-existent")
+
+        assert info is None

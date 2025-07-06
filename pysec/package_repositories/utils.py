@@ -3,6 +3,7 @@
 import logging
 
 from ._apt import AptPackageRepository
+from ._docker import DockerPackageRepository
 from ._python import PythonPackageRepository
 from .base import PackageRepositoryChecker
 from .homebrew import HomebrewPackageRepository
@@ -24,6 +25,7 @@ def get_available_repositories() -> list[PackageRepositoryChecker]:
         AptPackageRepository(),
         PythonPackageRepository(),
         SnapPackageRepository(),
+        DockerPackageRepository(),
         HomebrewPackageRepository(),
         PacmanPackageRepository(),
     ]

@@ -80,6 +80,7 @@ ignore = [
     "S101",  # Use of `assert` detected
     "ARG001",  # Unused function argument clashes with pytest fixtures
     "ANN001",  # Missing type annotation for function argument - also bad for fixtures
+    "PLR0913",  # Too many arguments in function definition
     ]
 "main.py" = [
     "B008",  # Do not perform function call `typer.Option` in argument defaults
