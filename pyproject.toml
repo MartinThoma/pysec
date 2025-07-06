@@ -1,6 +1,6 @@
 [build-system]
-requires = ["flit_core >=3.2,<4"]
-build-backend = "flit_core.buildapi"
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
 
 [project]
 name = "pysec"
@@ -26,16 +26,14 @@ dev = ["pytest", "ruff", "pre-commit", "mypy", "pytest-coverage", "types-request
 [project.scripts]
 pysec = "pysec.cli.main:main"
 
-[tool.flit.sdist]
-exclude = [
-    "tests/",
-    "*.pyc",
-    "__pycache__",
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["pysec*"]
+
+[tool.setuptools.package-data]
+"pysec.server" = [
+    "templates/**/*"
 ]
-
-[tool.flit.module]
-name = "pysec"
-
 [tool.mypy]
 ignore_missing_imports = true
 

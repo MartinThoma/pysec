@@ -167,7 +167,7 @@ class TestCreateClientCommand:
 
         assert result.exit_code != 0  # Typer uses exit code 2 for argument errors
         # Check for the specific error message
-        assert "Missing argument 'NAME'" in result.stdout
+        assert "Missing argument 'NAME'" in result.stderr
 
 
 class TestMigrateCommand:
@@ -253,8 +253,8 @@ class TestServerAppIntegration:
         assert result.exit_code == 0
         # No need to strip ANSI codes since we're using NO_COLOR env var
         assert "Start the pysec Django server" in result.stdout
-        assert "--host" in result.stdout
-        assert "--port" in result.stdout
+        assert "-host" in result.stdout
+        assert "-port" in result.stdout
 
 
 # Integration test with the actual CLI
