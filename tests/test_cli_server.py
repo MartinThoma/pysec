@@ -76,7 +76,7 @@ class TestStartServerCommand:
             "runserver",
             "127.0.0.1:8000",
         ]
-        assert call_args[1]["cwd"] == "/fake/project/root"
+        assert Path(call_args[1]["cwd"]) == Path("/fake/project/root")
         assert call_args[1]["check"] is True
 
     @patch("pysec.cli.server.subprocess.run")
