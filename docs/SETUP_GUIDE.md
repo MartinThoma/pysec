@@ -18,7 +18,7 @@ pip install -e .
 
 ```bash
 # Start the server (will run on http://127.0.0.1:8000)
-python -m pysec server start
+pysec server start
 ```
 
 The server will display:
@@ -37,7 +37,7 @@ On any machine you want to monitor:
 
 ```bash
 # Configure the client with your server URL and token
-python -m pysec client configure \
+pysec client configure \
   --server-url http://your-server-ip:8000 \
   --token YOUR_GENERATED_TOKEN
 ```
@@ -46,7 +46,7 @@ python -m pysec client configure \
 
 ```bash
 # Run the audit and send data to server
-python -m pysec client run
+pysec client run
 ```
 
 ## Available Commands
@@ -54,31 +54,31 @@ python -m pysec client run
 ### Server Commands
 ```bash
 # Start server with custom settings
-python -m pysec server start --host 0.0.0.0 --port 8080
+pysec server start --host 0.0.0.0 --port 8080
 
 # Start with auto-reload for development
-python -m pysec server start --reload
+pysec server start --reload
 ```
 
 ### Client Commands
 ```bash
 # Configure client
-python -m pysec client configure --server-url URL --token TOKEN
+pysec client configure --server-url URL --token TOKEN
 
 # Run audit (uses saved config)
-python -m pysec client run
+pysec client run
 
 # Run with custom server/token (overrides config)
-python -m pysec client run --server-url URL --token TOKEN
+pysec client run --server-url URL --token TOKEN
 ```
 
 ### Existing Commands (still available)
 ```bash
 # Audit system configuration
-python -m pysec audit config
+pysec audit config
 
 # Audit installed packages
-python -m pysec audit packages
+pysec audit packages
 ```
 
 ## Features

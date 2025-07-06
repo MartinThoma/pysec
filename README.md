@@ -37,7 +37,8 @@ pipx install -e .
 
 ### Examples
 
-```
+```bash
+# Audit system configuration
 $ pysec audit config
 Running system configuration audit...
 - Found checker: UbuntuSecurityChecker
@@ -45,6 +46,15 @@ Running system configuration audit...
 ✗ Disk is NOT encrypted
 ✓ Screen locks after 15 minutes
 ✓ Automatic daily updates are enabled
+
+# Start the server for client management
+$ pysec server start
+
+# Configure a client to report to server
+$ pysec client configure --server-url http://server:8000 --token TOKEN
+
+# Run client audit and send to server
+$ pysec client run
 ```
 
 
