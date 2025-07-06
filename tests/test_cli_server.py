@@ -162,7 +162,7 @@ class TestCreateClientCommand:
 
     def test_create_client_missing_name(self) -> None:
         """Test create client without providing name."""
-        runner = CliRunner()
+        runner = CliRunner(env={"NO_COLOR": "1"})
         result = runner.invoke(server_app, ["create-client"])
 
         assert result.exit_code != 0  # Typer uses exit code 2 for argument errors
@@ -234,29 +234,27 @@ class TestServerAppIntegration:
 
     def test_server_app_help(self) -> None:
         """Test that server app shows help correctly."""
-        runner = CliRunner()
+        runner = CliRunner(env={"NO_COLOR": "1"})
         result = runner.invoke(server_app, ["--help"])
 
         assert result.exit_code == 0
-        # Strip ANSI codes and normalize whitespace for reliable testing
-        cleaned_output = result.stdout.encode("ascii", "ignore").decode("ascii")
-        assert "Manage pysec Django server" in cleaned_output
-        assert "start" in cleaned_output
-        assert "create-client" in cleaned_output
-        assert "migrate" in cleaned_output
-        assert "createsuperuser" in cleaned_output
+        # No need to strip ANSI codes since we're using NO_COLOR env var
+        assert "Manage pysec Django server" in result.stdout
+        assert "start" in result.stdout
+        assert "create-client" in result.stdout
+        assert "migrate" in result.stdout
+        assert "createsuperuser" in result.stdout
 
     def test_start_command_help(self) -> None:
         """Test start command help."""
-        runner = CliRunner()
+        runner = CliRunner(env={"NO_COLOR": "1"})
         result = runner.invoke(server_app, ["start", "--help"])
 
         assert result.exit_code == 0
-        # Strip ANSI codes for reliable testing
-        cleaned_output = result.stdout.encode("ascii", "ignore").decode("ascii")
-        assert "Start the pysec Django server" in cleaned_output
-        assert "--host" in cleaned_output
-        assert "--port" in cleaned_output
+        # No need to strip ANSI codes since we're using NO_COLOR env var
+        assert "Start the pysec Django server" in result.stdout
+        assert "--host" in result.stdout
+        assert "--port" in result.stdout
 
 
 # Integration test with the actual CLI
@@ -265,10 +263,9 @@ class TestCLIIntegration:
 
     def test_server_command_exists(self) -> None:
         """Test that server command is available in main CLI."""
-        runner = CliRunner()
+        runner = CliRunner(env={"NO_COLOR": "1"})
         result = runner.invoke(app, ["server", "--help"])
 
         assert result.exit_code == 0
-        # Strip ANSI codes for reliable testing
-        cleaned_output = result.stdout.encode("ascii", "ignore").decode("ascii")
-        assert "Manage pysec Django server" in cleaned_output
+        # No need to strip ANSI codes since we're using NO_COLOR env var
+        assert "Manage pysec Django server" in result.stdout

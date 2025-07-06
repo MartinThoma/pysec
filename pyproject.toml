@@ -27,7 +27,14 @@ dev = ["pytest", "ruff", "pre-commit", "mypy", "pytest-coverage", "types-request
 pysec = "pysec.cli.main:main"
 
 [tool.flit.sdist]
-exclude = ["tests/", "*.pyc", "__pycache__"]
+exclude = [
+    "tests/",
+    "*.pyc",
+    "__pycache__",
+]
+
+[tool.flit.module]
+name = "pysec"
 
 [tool.mypy]
 ignore_missing_imports = true
