@@ -1,6 +1,6 @@
 # Makefile for pysec project
 
-.PHONY: clean help test lint format install dev-install
+.PHONY: clean help test lint format install dev-install specs
 
 # Default target
 help:
@@ -11,6 +11,7 @@ help:
 	@echo "  format      - Format code using ruff"
 	@echo "  install     - Install the package"
 	@echo "  dev-install - Install in development mode with dev dependencies"
+	@echo "  specs       - Generate OpenAPI specs to docs/specs.yml"
 	@echo "  help        - Show this help message"
 
 # Clean target - removes all __pycache__ directories and .pyc files
@@ -44,3 +45,9 @@ dev-install:
 
 tree:
 	tree -I venv
+
+# Generate OpenAPI specs
+specs:
+	@echo "Generating OpenAPI specs..."
+	python manage.py spectacular --color --file docs/specs.yml
+	@echo "OpenAPI specs generated at docs/specs.yml"
