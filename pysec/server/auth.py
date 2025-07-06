@@ -1,4 +1,4 @@
-"""Authentication utilities for Django pysec server."""
+"""Authentication utilities for pysec server."""
 
 import secrets
 import string
