@@ -52,6 +52,13 @@ $ pysec server start
 Starting pysec Django server on 127.0.0.1:8000
 Access the dashboard at: http://127.0.0.1:8000/
 
+# Set up the database (first time only)
+$ pysec server manage.py migrate
+$ pysec server manage.py createsuperuser
+
+# Create a client token
+$ pysec server manage.py create_client myclient
+
 # Configure a client to report to server
 $ pysec client configure --server-url http://server:8000 --token TOKEN
 

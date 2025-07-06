@@ -20,10 +20,10 @@ Before starting the server for the first time, you need to set up the database:
 
 ```bash
 # Apply database migrations
-pysec server migrate
+pysec server manage.py migrate
 
 # Create a superuser account for admin access
-pysec server createsuperuser
+pysec server manage.py createsuperuser
 ```
 
 You'll be prompted to enter:
@@ -73,14 +73,38 @@ pysec client run
 ### Server Commands
 ```bash
 # Initialize database (run once before first start)
-pysec server migrate
-pysec server createsuperuser
+pysec server manage.py migrate
+pysec server manage.py createsuperuser
 
 # Start server with custom settings
 pysec server start --host 0.0.0.0 --port 8080
 
-# Start with auto-reload for development
-pysec server start --reload
+# Create a client and get authentication token
+pysec server manage.py create_client myclient
+
+# Access all Django management commands
+pysec server manage.py help
+pysec server manage.py collectstatic
+pysec server manage.py shell
+```
+
+### Django Management Commands
+
+The `pysec server manage.py` command provides full access to Django's management system:
+
+```bash
+# See all available commands
+pysec server manage.py help
+
+# Common Django commands
+pysec server manage.py runserver 0.0.0.0:8000
+pysec server manage.py migrate --plan
+pysec server manage.py createsuperuser
+pysec server manage.py create_client myclient
+pysec server manage.py collectstatic
+pysec server manage.py shell
+pysec server manage.py check
+pysec server manage.py showmigrations
 ```
 
 ### Client Commands
