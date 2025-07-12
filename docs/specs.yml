@@ -340,12 +340,22 @@ components:
       - version
     PackageRepositoryEnum:
       enum:
+      - UNKNOWN
       - DEBIAN_APT
       - PYTHON_PIP
+      - SNAP
+      - HOMEBREW
+      - ARCH_PACMAN
+      - DOCKER
       type: string
       description: |-
+        * `UNKNOWN` - Unknown/Legacy
         * `DEBIAN_APT` - Debian/Ubuntu APT
         * `PYTHON_PIP` - Python pip
+        * `SNAP` - Snap packages
+        * `HOMEBREW` - Homebrew (macOS)
+        * `ARCH_PACMAN` - Arch Linux Pacman
+        * `DOCKER` - Docker images/containers
     PackagesListRequest:
       type: object
       description: Serializer for bulk package creation.
