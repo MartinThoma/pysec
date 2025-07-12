@@ -3,14 +3,16 @@
 import json
 import os
 import tempfile
+import unittest.mock
 
 import pytest
 from django.contrib.auth.models import User
 from django.test import Client as DjangoTestClient
 from rest_framework import status
 
-from pysec.client import ClientConfig
+from pysec.client import ClientConfig, get_audit_events
 from pysec.config import get_client_config_file
+from pysec.osbase import BaseSecurityChecker
 from pysec.server.auth import CLIENT_TOKEN_LENGHT
 from pysec.server.models import AuditLog, Client, Package, SecurityInfo
 
@@ -387,3 +389,115 @@ def test_client_detail_view(test_client: DjangoTestClient, admin_user: User) -> 
     assert response.status_code == status.HTTP_200_OK
     assert b"test-client" in response.content
     assert b"requests" in response.content
+
+
+@pytest.fixture
+def mock_security_checker() -> unittest.mock.Mock:
+    """Create a mock security checker for testing."""
+    return unittest.mock.Mock(spec=BaseSecurityChecker)
+
+
+@pytest.mark.parametrize(
+    ("checker_return", "expected_events", "expected_length", "should_print_warning"),
+    [
+        # Test case: checker returns normal events
+        (
+            [
+                {"timestamp": "2023-01-01T12:00:00Z", "event": "pysec_client_run"},
+                {"timestamp": "2023-01-01T12:01:00Z", "event": "user_login: testuser"},
+            ],
+            [
+                {"timestamp": "2023-01-01T12:00:00Z", "event": "pysec_client_run"},
+                {"timestamp": "2023-01-01T12:01:00Z", "event": "user_login: testuser"},
+            ],
+            2,
+            False,
+        ),
+        # Test case: checker returns empty list
+        ([], [], 0, False),
+        # Test case: checker returns complex events
+        (
+            [
+                {"timestamp": "2023-06-29T10:30:00Z", "event": "user_login: alice"},
+                {
+                    "timestamp": "2023-06-29T10:31:00Z",
+                    "event": "package_install: nginx-1.20.1",
+                },
+                {
+                    "timestamp": "2023-06-29T10:32:00Z",
+                    "event": "ssh_auth: Accepted for user from 192.168.1.100",
+                },
+            ],
+            [
+                {"timestamp": "2023-06-29T10:30:00Z", "event": "user_login: alice"},
+                {
+                    "timestamp": "2023-06-29T10:31:00Z",
+                    "event": "package_install: nginx-1.20.1",
+                },
+                {
+                    "timestamp": "2023-06-29T10:32:00Z",
+                    "event": "ssh_auth: Accepted for user from 192.168.1.100",
+                },
+            ],
+            3,
+            False,
+        ),
+    ],
+)
+def test_get_audit_events_with_checker(
+    mock_security_checker,
+    checker_return,
+    expected_events,
+    expected_length,
+    should_print_warning,
+) -> None:
+    """Test get_audit_events function with various checker responses."""
+    mock_security_checker.get_audit_events.return_value = checker_return
+
+    with unittest.mock.patch(
+        "pysec.client.get_checker", return_value=mock_security_checker
+    ):
+        events = get_audit_events()
+
+        # Verify the function returns the expected events
+        assert events == expected_events
+        assert len(events) == expected_length
+
+        # Verify events have correct format
+        for event in events:
+            assert "timestamp" in event
+            assert "event" in event
+
+        # Verify get_audit_events was called on the checker
+        mock_security_checker.get_audit_events.assert_called_once()
+
+
+def test_get_audit_events_no_checker() -> None:
+    """Test get_audit_events function when no checker is available."""
+    with unittest.mock.patch("pysec.client.get_checker", return_value=None):
+        events = get_audit_events()
+
+        # Should return empty list when no checker is available
+        assert events == []
+
+
+def test_get_audit_events_checker_exception(mock_security_checker) -> None:
+    """Test get_audit_events function when checker raises an exception."""
+    mock_security_checker.get_audit_events.side_effect = Exception("OS command failed")
+
+    with (
+        unittest.mock.patch(
+            "pysec.client.get_checker", return_value=mock_security_checker
+        ),
+        unittest.mock.patch("pysec.client.print") as mock_print,
+    ):
+        events = get_audit_events()
+
+        # Should return empty list when exception occurs
+        assert events == []
+
+        # Verify the exception warning was printed
+        mock_print.assert_called_once()
+        warning_message = mock_print.call_args[0][0]
+        assert "Warning: OS-specific audit event collection failed" in warning_message
+        assert "OS command failed" in warning_message
