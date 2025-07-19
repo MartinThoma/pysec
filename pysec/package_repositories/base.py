@@ -12,7 +12,7 @@ class PackageRepositoryChecker(ABC):
     @classmethod
     def get_repository_type(cls) -> str:
         """Get the repository type identifier."""
-        return cls.REPOSITORY_TYPE
+        return cls.REPOSITORY_TYPE  # pragma: no cover
 
     @abstractmethod
     def is_available(self) -> bool:

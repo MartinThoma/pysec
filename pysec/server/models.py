@@ -1,18 +1,11 @@
 """Django models for pysec server."""
 
-import secrets
-import string
-
 from django.db import models
 from django.utils import timezone
 
+from pysec.server.auth import CLIENT_TOKEN_LENGHT, generate_client_token
+
 from .choices import PackageRepository
-
-
-def generate_client_token() -> str:
-    """Generate a secure random token for client authentication."""
-    alphabet = string.ascii_letters + string.digits + "-_"
-    return "".join(secrets.choice(alphabet) for _ in range(64))
 
 
 class Client(models.Model):
@@ -32,7 +25,7 @@ class Client(models.Model):
     def save(self, *args, **kwargs) -> None:
         """Override save to generate token automatically if not provided."""
         if not self.token:
-            self.token = generate_client_token()
+            self.token = generate_client_token(CLIENT_TOKEN_LENGHT)
         super().save(*args, **kwargs)
 
 

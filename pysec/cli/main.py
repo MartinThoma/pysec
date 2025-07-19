@@ -46,8 +46,3 @@ def audit_packages(
     """Check installed packages for known CVEs."""
     print("[bold cyan]Auditing installed packages...[/bold cyan]")
     audit_installed_packages(verbosity=verbosity, min_severity=min_severity)
-
-
-def main() -> None:
-    """Connect subcommands here."""
-    app()
