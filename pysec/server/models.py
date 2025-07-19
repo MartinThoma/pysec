@@ -3,7 +3,7 @@
 from django.db import models
 from django.utils import timezone
 
-from pysec.server.auth import CLIENT_TOKEN_LENGHT, generate_client_token
+from pysec.server.auth import generate_client_token
 
 from .choices import PackageRepository
 
@@ -25,7 +25,7 @@ class Client(models.Model):
     def save(self, *args, **kwargs) -> None:
         """Override save to generate token automatically if not provided."""
         if not self.token:
-            self.token = generate_client_token(CLIENT_TOKEN_LENGHT)
+            self.token = generate_client_token()
         super().save(*args, **kwargs)
 
 
