@@ -264,6 +264,7 @@ def test_security_info_endpoint(
     assert response_data["status"] == "success"
 
     # Verify security info was saved
+    assert str(test_auth_client) == "test-client"
     security_info = SecurityInfo.objects.filter(client=test_auth_client).first()
     assert security_info is not None
     assert security_info.disk_encrypted is True
@@ -298,6 +299,7 @@ def test_audit_log_endpoint(
     audit_log = AuditLog.objects.filter(client=test_auth_client).first()
     assert audit_log is not None
     assert audit_log.event == "test audit event"
+    assert "test-client" in str(audit_log)
 
 
 @pytest.mark.django_db
@@ -379,8 +381,10 @@ def test_client_detail_view(test_client: DjangoTestClient, admin_user: User) -> 
     """Test client detail view."""
     # Create test client with data
     client = Client.objects.create(name="test-client")
-    Package.objects.create(client=client, name="requests", version="2.25.1")
-    SecurityInfo.objects.create(client=client, disk_encrypted=True)
+    package = Package.objects.create(client=client, name="requests", version="2.25.1")
+    assert str(package) == "requests 2.25.1 ()"
+    sec_info = SecurityInfo.objects.create(client=client, disk_encrypted=True)
+    assert str(sec_info) == "Security info for test-client"
 
     # Login and access client detail
     test_client.force_login(admin_user)
