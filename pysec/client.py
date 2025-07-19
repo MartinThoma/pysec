@@ -69,12 +69,12 @@ def get_installed_packages() -> list[dict[str, str]]:
                             "name": package["name"],
                             "version": package["version"],
                             "package_repository": package["repository_type"],
-                        }
+                        },
                     )
                 else:
                     print(
                         f"[yellow]Warning: Skipping malformed package: "
-                        f"{package}[/yellow]"
+                        f"{package}[/yellow]",
                     )
 
         return all_packages
@@ -100,7 +100,7 @@ def get_installed_packages() -> list[dict[str, str]]:
                         "package_repository": "PYTHON_PIP",
                     }
                     for pkg in pip_packages
-                ]
+                ],
             )
         except (subprocess.CalledProcessError, json.JSONDecodeError):
             print("[yellow]Warning: Could not get pip packages[/yellow]")

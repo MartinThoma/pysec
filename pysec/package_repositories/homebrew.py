@@ -62,7 +62,7 @@ class HomebrewPackageRepository(PackageRepositoryChecker):
                             "name": name,
                             "version": version,
                             "repository_type": self.REPOSITORY_TYPE,
-                        }
+                        },
                     )
 
             return packages
@@ -136,7 +136,8 @@ class HomebrewPackageRepository(PackageRepositoryChecker):
                 {
                     "name": package_data["name"],
                     "current_version": package_data.get(
-                        "installed_versions", ["unknown"]
+                        "installed_versions",
+                        ["unknown"],
                     )[0],
                     "latest_version": package_data.get("current_version", "unknown"),
                     "repository_type": self.REPOSITORY_TYPE,

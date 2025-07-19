@@ -62,7 +62,9 @@ def test_get_project_root_fallback_to_cwd(mock_path) -> None:
 @patch("pysec.cli.server.subprocess.run")
 @patch("pysec.cli.server.get_project_root")
 def test_start_server_default_options_with_manage_py(
-    mock_get_root, mock_subprocess, cli_runner
+    mock_get_root,
+    mock_subprocess,
+    cli_runner,
 ) -> None:
     """Test start server with default host and port using manage.py."""
     # Set up mocks
@@ -95,7 +97,11 @@ def test_start_server_default_options_with_manage_py(
 @patch("django.setup")
 @patch("pysec.cli.server.get_project_root")
 def test_start_server_default_options_without_manage_py(
-    mock_get_root, mock_django_setup, mock_execute, mock_setup_django, cli_runner
+    mock_get_root,
+    mock_django_setup,
+    mock_execute,
+    mock_setup_django,
+    cli_runner,
 ) -> None:
     """Test start server with default host and port using Django directly."""
     # Set up mocks
@@ -130,7 +136,8 @@ def test_start_server_custom_options(mock_get_root, mock_subprocess, cli_runner)
         mock_exists.return_value = True
 
         result = cli_runner.invoke(
-            server_app, ["start", "--host", "127.0.0.1", "--port", "9000"]
+            server_app,
+            ["start", "--host", "127.0.0.1", "--port", "9000"],
         )
 
         assert result.exit_code == 0
@@ -145,7 +152,9 @@ def test_start_server_custom_options(mock_get_root, mock_subprocess, cli_runner)
 @patch("pysec.cli.server.subprocess.run")
 @patch("pysec.cli.server.get_project_root")
 def test_start_server_subprocess_error(
-    mock_get_root, mock_subprocess, cli_runner
+    mock_get_root,
+    mock_subprocess,
+    cli_runner,
 ) -> None:
     """Test start server when subprocess fails."""
     # Set up mocks
@@ -174,7 +183,8 @@ def test_start_server_django_import_error(mock_get_root, cli_runner) -> None:
     with (
         patch.object(Path, "exists") as mock_exists,
         patch(
-            "pysec.cli.server.setup_django", side_effect=ImportError("Django not found")
+            "pysec.cli.server.setup_django",
+            side_effect=ImportError("Django not found"),
         ),
     ):
         mock_exists.return_value = False
@@ -191,7 +201,9 @@ def test_start_server_django_import_error(mock_get_root, cli_runner) -> None:
 @patch("pysec.cli.server.subprocess.run")
 @patch("pysec.cli.server.get_project_root")
 def test_create_client_success_with_manage_py(
-    mock_get_root, mock_subprocess, cli_runner
+    mock_get_root,
+    mock_subprocess,
+    cli_runner,
 ) -> None:
     """Test successful client creation using manage.py."""
     # Set up mocks
@@ -203,7 +215,8 @@ def test_create_client_success_with_manage_py(
         mock_exists.return_value = True
 
         result = cli_runner.invoke(
-            server_app, ["manage.py", "create_client", "test-client"]
+            server_app,
+            ["manage.py", "create_client", "test-client"],
         )
 
         assert result.exit_code == 0
@@ -233,7 +246,9 @@ def test_create_client_missing_name(cli_runner) -> None:
 @patch("pysec.cli.server.subprocess.run")
 @patch("pysec.cli.server.get_project_root")
 def test_migrate_success_with_manage_py(
-    mock_get_root, mock_subprocess, cli_runner
+    mock_get_root,
+    mock_subprocess,
+    cli_runner,
 ) -> None:
     """Test successful migration using manage.py."""
     # Set up mocks
@@ -263,7 +278,11 @@ def test_migrate_success_with_manage_py(
 @patch("django.setup")
 @patch("pysec.cli.server.get_project_root")
 def test_migrate_success_without_manage_py(
-    mock_get_root, mock_django_setup, mock_execute, mock_setup_django, cli_runner
+    mock_get_root,
+    mock_django_setup,
+    mock_execute,
+    mock_setup_django,
+    cli_runner,
 ) -> None:
     """Test successful migration using Django directly."""
     # Set up mocks
@@ -292,7 +311,9 @@ def test_migrate_success_without_manage_py(
 @patch("pysec.cli.server.subprocess.run")
 @patch("pysec.cli.server.get_project_root")
 def test_create_superuser_success_with_manage_py(
-    mock_get_root, mock_subprocess, cli_runner
+    mock_get_root,
+    mock_subprocess,
+    cli_runner,
 ) -> None:
     """Test successful superuser creation using manage.py."""
     # Set up mocks
@@ -322,7 +343,11 @@ def test_create_superuser_success_with_manage_py(
 @patch("django.setup")
 @patch("pysec.cli.server.get_project_root")
 def test_create_superuser_success_without_manage_py(
-    mock_get_root, mock_django_setup, mock_execute, mock_setup_django, cli_runner
+    mock_get_root,
+    mock_django_setup,
+    mock_execute,
+    mock_setup_django,
+    cli_runner,
 ) -> None:
     """Test successful superuser creation using Django directly."""
     # Set up mocks

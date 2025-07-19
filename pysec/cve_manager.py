@@ -93,7 +93,7 @@ class CveManager:
         parts1 += [0] * (length - len(parts1))
         parts2 += [0] * (length - len(parts2))
 
-        for a, b in zip(parts1, parts2):
+        for a, b in zip(parts1, parts2, strict=False):
             if a < b:
                 return -1
             if a > b:

@@ -30,7 +30,10 @@ class ClientAdmin(admin.ModelAdmin):
     token_preview.short_description = "Token"  # type: ignore[attr-defined]
 
     def get_form(
-        self, request: HttpRequest, obj: Client | None = None, **kwargs
+        self,
+        request: HttpRequest,
+        obj: Client | None = None,
+        **kwargs,
     ) -> type[ModelForm]:
         """Customize the form to show token help text."""
         form = super().get_form(request, obj, **kwargs)

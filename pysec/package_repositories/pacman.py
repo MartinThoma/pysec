@@ -43,7 +43,10 @@ class PacmanPackageRepository(PackageRepositoryChecker):
 
         try:
             result = subprocess.run(
-                ["pacman", "-Q"], capture_output=True, text=True, check=True
+                ["pacman", "-Q"],
+                capture_output=True,
+                text=True,
+                check=True,
             )
 
             packages = []
@@ -59,7 +62,7 @@ class PacmanPackageRepository(PackageRepositoryChecker):
                                 "name": name,
                                 "version": version,
                                 "repository_type": self.REPOSITORY_TYPE,
-                            }
+                            },
                         )
 
             return packages
@@ -125,7 +128,10 @@ class PacmanPackageRepository(PackageRepositoryChecker):
 
         try:
             result = subprocess.run(
-                ["pacman", "-Qu"], capture_output=True, text=True, check=True
+                ["pacman", "-Qu"],
+                capture_output=True,
+                text=True,
+                check=True,
             )
 
             upgradable_packages = []
@@ -143,7 +149,7 @@ class PacmanPackageRepository(PackageRepositoryChecker):
                                 "current_version": current_version,
                                 "latest_version": new_version,
                                 "repository_type": self.REPOSITORY_TYPE,
-                            }
+                            },
                         )
 
             return upgradable_packages

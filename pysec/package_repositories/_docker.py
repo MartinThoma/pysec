@@ -106,7 +106,7 @@ class DockerPackageRepository(PackageRepositoryChecker):
                             "size": image_data.get("Size", "unknown"),
                             "created": image_data.get("CreatedSince", "unknown"),
                             "image_id": image_data.get("ID", "unknown"),
-                        }
+                        },
                     )
                 except json.JSONDecodeError:
                     continue
@@ -141,7 +141,7 @@ class DockerPackageRepository(PackageRepositoryChecker):
                             "status": container_data.get("Status", "unknown"),
                             "created": container_data.get("CreatedAt", "unknown"),
                             "container_id": container_data.get("ID", "unknown"),
-                        }
+                        },
                     )
                 except json.JSONDecodeError:
                     continue

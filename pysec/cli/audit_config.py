@@ -24,7 +24,7 @@ def check_config() -> None:
         total_packages = sum(len(packages) for packages in repo_packages.values())
         print(
             f"- Installed packages: {total_packages} across "
-            f"{len(repo_packages)} repository types"
+            f"{len(repo_packages)} repository types",
         )
         for repo_type, packages in repo_packages.items():
             print(f"  - {repo_type}: {len(packages)} packages")

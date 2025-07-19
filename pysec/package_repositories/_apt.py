@@ -81,7 +81,7 @@ class AptPackageRepository(PackageRepositoryChecker):
                                 "version": version,
                                 "architecture": architecture,
                                 "repository_type": self.REPOSITORY_TYPE,
-                            }
+                            },
                         )
 
             return packages

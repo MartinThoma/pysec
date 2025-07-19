@@ -33,7 +33,7 @@ class MockRepository(PackageRepositoryChecker):
                 "name": "test-package",
                 "version": "1.0.0",
                 "repository_type": self.REPOSITORY_TYPE,
-            }
+            },
         ]
 
 
@@ -258,14 +258,14 @@ class TestClientPackageSubmission:
                         "name": "libc6",
                         "version": "2.31-0ubuntu9.9",
                         "repository_type": "DEBIAN_APT",
-                    }
+                    },
                 ],
                 "PYTHON_PIP": [
                     {
                         "name": "requests",
                         "version": "2.28.1",
                         "repository_type": "PYTHON_PIP",
-                    }
+                    },
                 ],
             }
 
@@ -322,7 +322,7 @@ class TestClientPackageSubmission:
                     "version": "2.28.1",
                     "package_repository": "PYTHON_PIP",
                 },
-            ]
+            ],
         }
 
         serializer = PackagesListSerializer(data=test_data)
@@ -376,7 +376,9 @@ class TestDockerPackageRepository:
     @patch("subprocess.run")
     @patch("shutil.which")
     def test_is_not_available_daemon_not_running(
-        self, mock_which, mock_subprocess
+        self,
+        mock_which,
+        mock_subprocess,
     ) -> None:
         """Test when Docker is installed but daemon is not running."""
         mock_which.return_value = "/usr/bin/docker"

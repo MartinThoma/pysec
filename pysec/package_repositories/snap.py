@@ -44,7 +44,10 @@ class SnapPackageRepository(PackageRepositoryChecker):
 
         try:
             result = subprocess.run(
-                ["snap", "list"], capture_output=True, text=True, check=True
+                ["snap", "list"],
+                capture_output=True,
+                text=True,
+                check=True,
             )
 
             packages = []
