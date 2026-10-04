@@ -50,6 +50,7 @@ class SnapPackageRepository(PackageRepositoryChecker):
                 check=True,
             )
 
+            latest_versions = self._get_latest_versions()
             packages = []
             lines = result.stdout.strip().splitlines()
 
@@ -63,6 +64,7 @@ class SnapPackageRepository(PackageRepositoryChecker):
                     package_info = {
                         "name": name,
                         "version": version,
+                        "latest": latest_versions.get(name, version),
                         "repository_type": self.REPOSITORY_TYPE,
                     }
 
@@ -124,4 +126,70 @@ class SnapPackageRepository(PackageRepositoryChecker):
             return None
 
         except subprocess.CalledProcessError:
+            return None
+
+    def _get_latest_versions(self) -> dict[str, str]:
+        """
+        Get the versions of all snaps with a pending refresh in a single call.
+
+        Returns:
+            dict[str, str]: Mapping of snap name to the version available in its
+            tracked channel. Snaps that are up to date are not included.
+
+        """
+        try:
+            result = subprocess.run(
+                ["snap", "refresh", "--list"],
+                capture_output=True,
+                text=True,
+                check=True,
+            )
+        except subprocess.CalledProcessError:
+            return {}
+
+        latest_versions: dict[str, str] = {}
+        # Skip header line. If nothing is pending, there is only a one-line message.
+        for line in result.stdout.strip().splitlines()[1:]:
+            parts = line.split()
+            if len(parts) >= 2:  # noqa: PLR2004
+                latest_versions[parts[0]] = parts[1]
+        return latest_versions
+
+    def get_latest_version(self, package_name: str) -> str | None:
+        """
+        Get the latest available version of a package from Snap store.
+
+        Args:
+            package_name (str): Name of the package to query.
+
+        Returns:
+            str | None: Latest version string or None if not found/not available.
+
+        """
+        if not self.is_available():
+            return None
+
+        try:
+            # Use snap info to get information about the package
+            result = subprocess.run(
+                ["snap", "info", package_name],
+                capture_output=True,
+                text=True,
+                check=True,
+            )
+
+            # Parse snap info output to find version information
+            for line in result.stdout.split("\n"):
+                line = line.strip()
+                # e.g. "latest/stable:    1.2.3 2023-01-01 (123) 123MB -"
+                if line.startswith("latest/stable:"):
+                    parts = line.split()
+                    if len(parts) >= 2:  # noqa: PLR2004
+                        return parts[1]
+
+            return None
+
+        except subprocess.CalledProcessError:
+            return None
+        except Exception:
             return None

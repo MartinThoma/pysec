@@ -54,12 +54,20 @@ class PythonPackageRepository(PackageRepositoryChecker):
             )
 
             packages_data = json.loads(result.stdout)
+            latest_versions = {
+                outdated["name"]: outdated["latest_version"]
+                for outdated in self.get_outdated_packages()
+            }
             packages = []
 
             for package_data in packages_data:
                 package_info = {
                     "name": package_data["name"],
                     "version": package_data["version"],
+                    "latest": latest_versions.get(
+                        package_data["name"],
+                        package_data["version"],
+                    ),
                     "repository_type": self.REPOSITORY_TYPE,
                 }
 
@@ -153,3 +161,55 @@ class PythonPackageRepository(PackageRepositoryChecker):
 
         except (subprocess.CalledProcessError, json.JSONDecodeError):
             return []
+
+    def get_latest_version(self, package_name: str) -> str | None:
+        """
+        Get the latest available version of a Python package.
+
+        Args:
+            package_name (str): Name of the package to query.
+
+        Returns:
+            str | None: Latest version string or None if not found/not available.
+
+        """
+        if not self.is_available():
+            return None
+
+        try:
+            pip_cmd = "pip3" if shutil.which("pip3") else "pip"
+            # Check if package exists in PyPI by searching for it
+            result = subprocess.run(
+                [pip_cmd, "index", "versions", package_name],
+                capture_output=True,
+                text=True,
+                check=False,  # Don't raise exception on non-zero exit
+            )
+
+            for line in result.stdout.splitlines():
+                # e.g. "Available versions: 1.2.3, 1.2.2, 1.2.1" (newest first)
+                _, found, versions = line.partition("Available versions:")
+                if found and versions.strip():
+                    return versions.split(",")[0].strip()
+
+            # Fallback: check if the package is outdated using pip list
+            for outdated in self.get_outdated_packages():
+                if outdated["name"].lower() == package_name.lower():
+                    return outdated["latest_version"]
+
+            # If not outdated, get current installed version as latest
+            show_result = subprocess.run(
+                [pip_cmd, "show", package_name],
+                capture_output=True,
+                text=True,
+                check=True,
+            )
+
+            for line in show_result.stdout.split("\n"):
+                if line.startswith("Version:"):
+                    return line.split(":", 1)[1].strip()
+
+            return None
+
+        except subprocess.CalledProcessError:
+            return None

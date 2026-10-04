@@ -50,6 +50,11 @@ class HomebrewPackageRepository(PackageRepositoryChecker):
                 check=True,
             )
 
+            latest_versions = {
+                # Tap formulae are reported by full name, e.g. "user/tap/name"
+                outdated["name"].rsplit("/", 1)[-1]: outdated["latest_version"]
+                for outdated in self.get_outdated_packages()
+            }
             packages = []
             for line in result.stdout.strip().splitlines():
                 parts = line.strip().split()
@@ -61,6 +66,7 @@ class HomebrewPackageRepository(PackageRepositoryChecker):
                         {
                             "name": name,
                             "version": version,
+                            "latest": latest_versions.get(name, version),
                             "repository_type": self.REPOSITORY_TYPE,
                         },
                     )
@@ -149,3 +155,42 @@ class HomebrewPackageRepository(PackageRepositoryChecker):
 
         except (subprocess.CalledProcessError, json.JSONDecodeError):
             return []
+
+    def get_latest_version(self, package_name: str) -> str | None:
+        """
+        Get the latest available version of a package from Homebrew.
+
+        Args:
+            package_name (str): Name of the package to query.
+
+        Returns:
+            str | None: Latest version string or None if not found/not available.
+
+        """
+        if not self.is_available():
+            return None
+
+        try:
+            # Use brew info to get the latest available version
+            result = subprocess.run(
+                ["brew", "info", "--json=v1", package_name],
+                capture_output=True,
+                text=True,
+                check=True,
+            )
+
+            info_data = json.loads(result.stdout)
+            if info_data and len(info_data) > 0:
+                # Get the first (should be only) result
+                package_info = info_data[0]
+                versions = package_info.get("versions", {})
+                stable_version = versions.get("stable")
+                if stable_version:
+                    return stable_version
+
+            return None
+
+        except (subprocess.CalledProcessError, json.JSONDecodeError):
+            return None
+        except Exception:
+            return None

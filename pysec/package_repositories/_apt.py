@@ -59,6 +59,7 @@ class AptPackageRepository(PackageRepositoryChecker):
                 check=True,
             )
 
+            latest_versions = self._get_latest_versions()
             packages = []
             for line in result.stdout.strip().split("\n"):
                 if not line:
@@ -79,6 +80,7 @@ class AptPackageRepository(PackageRepositoryChecker):
                             {
                                 "name": package_name,
                                 "version": version,
+                                "latest": latest_versions.get(package_name, version),
                                 "architecture": architecture,
                                 "repository_type": self.REPOSITORY_TYPE,
                             },
@@ -138,4 +140,69 @@ class AptPackageRepository(PackageRepositoryChecker):
             return None
 
         except subprocess.CalledProcessError:
+            return None
+
+    def _get_latest_versions(self) -> dict[str, str]:
+        """
+        Get the candidate versions of all upgradable packages in a single call.
+
+        Returns:
+            dict[str, str]: Mapping of package name to candidate version.
+            Packages that are up to date are not included.
+
+        """
+        try:
+            result = subprocess.run(
+                ["apt", "list", "--upgradable"],
+                capture_output=True,
+                text=True,
+                check=True,
+            )
+        except (subprocess.CalledProcessError, FileNotFoundError):
+            return {}
+
+        latest_versions: dict[str, str] = {}
+        for line in result.stdout.splitlines():
+            # e.g. "openssl/jammy-updates 3.0.13-1 amd64 [upgradable from: 3.0.12-1]"
+            name, _, rest = line.partition("/")
+            parts = rest.split()
+            if name and len(parts) >= 2:  # noqa: PLR2004
+                latest_versions[name] = parts[1]
+        return latest_versions
+
+    def get_latest_version(self, package_name: str) -> str | None:
+        """
+        Get the latest available version of a package from APT repositories.
+
+        Args:
+            package_name (str): Name of the package to query.
+
+        Returns:
+            str | None: Latest version string or None if not found/not available.
+
+        """
+        if not self.is_available():
+            return None
+
+        try:
+            # Use apt-cache policy to get the candidate (latest available) version
+            result = subprocess.run(
+                ["apt-cache", "policy", package_name],
+                capture_output=True,
+                text=True,
+                check=True,
+            )
+
+            for line in result.stdout.split("\n"):
+                line = line.strip()
+                if line.startswith("Candidate:"):
+                    candidate_version = line.split(":", 1)[1].strip()
+                    if candidate_version != "(none)":
+                        return candidate_version
+
+            return None
+
+        except subprocess.CalledProcessError:
+            return None
+        except Exception:
             return None

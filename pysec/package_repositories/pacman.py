@@ -49,6 +49,10 @@ class PacmanPackageRepository(PackageRepositoryChecker):
                 check=True,
             )
 
+            latest_versions = {
+                upgradable["name"]: upgradable["latest_version"]
+                for upgradable in self.get_upgradable_packages()
+            }
             packages = []
             for line in result.stdout.strip().split("\n"):
                 if line.strip():
@@ -61,6 +65,7 @@ class PacmanPackageRepository(PackageRepositoryChecker):
                             {
                                 "name": name,
                                 "version": version,
+                                "latest": latest_versions.get(name, version),
                                 "repository_type": self.REPOSITORY_TYPE,
                             },
                         )
@@ -157,3 +162,40 @@ class PacmanPackageRepository(PackageRepositoryChecker):
         except subprocess.CalledProcessError:
             # No packages to upgrade or other error
             return []
+
+    def get_latest_version(self, package_name: str) -> str | None:
+        """
+        Get the latest available version of a package from Pacman repositories.
+
+        Args:
+            package_name (str): Name of the package to query.
+
+        Returns:
+            str | None: Latest version string or None if not found/not available.
+
+        """
+        if not self.is_available():
+            return None
+
+        try:
+            # Use pacman -Si to get sync database info (available version)
+            result = subprocess.run(
+                ["pacman", "-Si", package_name],
+                capture_output=True,
+                text=True,
+                check=True,
+            )
+
+            # Parse pacman sync info output
+            for line in result.stdout.strip().split("\n"):
+                if line.startswith("Version"):
+                    version_line = line.strip()
+                    if ":" in version_line:
+                        return version_line.split(":", 1)[1].strip()
+
+            return None
+
+        except subprocess.CalledProcessError:
+            return None
+        except Exception:
+            return None

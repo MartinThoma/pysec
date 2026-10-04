@@ -31,14 +31,36 @@ class PackageRepositoryChecker(ABC):
 
         Returns:
             list[dict[str, str]]: List of packages with their metadata.
-            Each package should be a dictionary with at least 'name' and 'version' keys.
+            Each package should be a dictionary with at least 'name', 'version',
+            and 'latest' keys. 'latest' equals 'version' if the package is up to date.
 
         Example:
             [
-                {"name": "openssl", "version": "1.1.1f-1ubuntu2.20"},
-                {"name": "python3", "version": "3.8.10-0ubuntu1~20.04.8"},
+                {
+                    "name": "openssl",
+                    "version": "1.1.1f-1ubuntu2.20",
+                    "latest": "1.1.1f-1ubuntu2.21",
+                },
+                {
+                    "name": "python3",
+                    "version": "3.8.10-0ubuntu1~20.04.8",
+                    "latest": "3.8.10-0ubuntu1~20.04.8",
+                },
                 ...
             ]
+
+        """
+
+    @abstractmethod
+    def get_latest_version(self, package_name: str) -> str | None:
+        """
+        Get the latest available version of a package from the repository.
+
+        Args:
+            package_name (str): Name of the package to query.
+
+        Returns:
+            str | None: Latest version string or None if not found/not available.
 
         """
 

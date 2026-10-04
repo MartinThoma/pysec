@@ -98,14 +98,17 @@ class DockerPackageRepository(PackageRepositoryChecker):
             if line.strip():
                 try:
                     image_data = json.loads(line)
+                    # Newer tags are not checked, so the current tag is "latest"
                     images.append(
                         {
                             "name": image_data.get("Repository", "unknown"),
                             "version": image_data.get("Tag", "unknown"),
+                            "latest": image_data.get("Tag", "unknown"),
                             "type": "image",
                             "size": image_data.get("Size", "unknown"),
                             "created": image_data.get("CreatedSince", "unknown"),
                             "image_id": image_data.get("ID", "unknown"),
+                            "repository_type": self.REPOSITORY_TYPE,
                         },
                     )
                 except json.JSONDecodeError:
@@ -133,14 +136,17 @@ class DockerPackageRepository(PackageRepositoryChecker):
             if line.strip():
                 try:
                     container_data = json.loads(line)
+                    # Newer images are not checked, so the current image is "latest"
                     containers.append(
                         {
                             "name": container_data.get("Names", "unknown"),
                             "version": container_data.get("Image", "unknown"),
+                            "latest": container_data.get("Image", "unknown"),
                             "type": "container",
                             "status": container_data.get("Status", "unknown"),
                             "created": container_data.get("CreatedAt", "unknown"),
                             "container_id": container_data.get("ID", "unknown"),
+                            "repository_type": self.REPOSITORY_TYPE,
                         },
                     )
                 except json.JSONDecodeError:
@@ -215,4 +221,21 @@ class DockerPackageRepository(PackageRepositoryChecker):
         except (subprocess.CalledProcessError, json.JSONDecodeError, IndexError):
             pass
 
+        return None
+
+    def get_latest_version(self, package_name: str) -> str | None:  # noqa: ARG002
+        """
+        Get the latest available version of a Docker image.
+
+        For Docker images, this concept doesn't directly apply as images are
+        typically versioned by tags. This method returns None.
+
+        Args:
+            package_name (str): Name of the package/image to query.
+
+        Returns:
+            str | None: Always returns None as Docker images don't have
+                       traditional "latest versions".
+
+        """
         return None

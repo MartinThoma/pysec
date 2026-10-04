@@ -11,6 +11,7 @@ from pysec.package_repositories import (
     DockerPackageRepository,
     PackageRepositoryChecker,
     PythonPackageRepository,
+    SnapPackageRepository,
     get_available_repositories,
 )
 from pysec.server.serializers import PackagesListSerializer
@@ -32,9 +33,13 @@ class MockRepository(PackageRepositoryChecker):
             {
                 "name": "test-package",
                 "version": "1.0.0",
+                "latest": "1.0.0",
                 "repository_type": self.REPOSITORY_TYPE,
             },
         ]
+
+    def get_latest_version(self, package_name: str) -> str | None:  # noqa: ARG002
+        return "1.0.0"
 
 
 class TestPackageRepositoryChecker:
@@ -114,6 +119,94 @@ class TestAptPackageRepository:
         repo = AptPackageRepository()
         with pytest.raises(RuntimeError, match="APT is not available"):
             repo.get_installed_packages()
+
+    @patch("subprocess.run")
+    @patch("shutil.which")
+    def test_get_installed_packages_latest(self, mock_which, mock_subprocess) -> None:
+        """Test that latest versions come from a single 'apt list' call."""
+        mock_which.return_value = "/usr/bin/apt"
+        outputs = {
+            "dpkg-query": (
+                "openssl\t3.0.12-1\tamd64\tinstall ok installed\n"
+                "curl\t8.5.0-2\tamd64\tinstall ok installed\n"
+            ),
+            "apt": (
+                "Listing...\n"
+                "openssl/jammy-updates 3.0.13-1 amd64 [upgradable from: 3.0.12-1]\n"
+            ),
+        }
+        mock_subprocess.side_effect = lambda cmd, **_: MagicMock(stdout=outputs[cmd[0]])
+
+        packages = AptPackageRepository().get_installed_packages()
+
+        latest = {package["name"]: package["latest"] for package in packages}
+        assert latest == {"openssl": "3.0.13-1", "curl": "8.5.0-2"}
+        assert mock_subprocess.call_count == 2  # noqa: PLR2004
+
+    @patch("subprocess.run")
+    @patch("shutil.which")
+    def test_get_installed_packages_latest_unavailable(
+        self,
+        mock_which,
+        mock_subprocess,
+    ) -> None:
+        """Test that latest falls back to the installed version if 'apt list' fails."""
+        mock_which.return_value = "/usr/bin/apt"
+        mock_subprocess.side_effect = [
+            MagicMock(stdout="openssl\t3.0.12-1\tamd64\tinstall ok installed\n"),
+            FileNotFoundError("apt"),
+        ]
+
+        packages = AptPackageRepository().get_installed_packages()
+
+        assert packages[0]["latest"] == "3.0.12-1"
+
+
+class TestSnapPackageRepository:
+    """Test Snap package repository implementation."""
+
+    snap_list = (
+        "Name     Version   Rev   Tracking       Publisher   Notes\n"
+        "core22   20240111  1122  latest/stable  canonical✓  base\n"
+        "firefox  122.0-2   3779  latest/stable  mozilla✓    -\n"
+    )
+
+    @patch("subprocess.run")
+    @patch("shutil.which")
+    def test_get_installed_packages_latest(self, mock_which, mock_subprocess) -> None:
+        """Test that latest versions come from a single 'snap refresh --list' call."""
+        mock_which.return_value = "/usr/bin/snap"
+        outputs = {
+            "list": self.snap_list,
+            "refresh": (
+                "Name     Version  Rev   Size   Publisher  Notes\n"
+                "firefox  123.0-1  3836  250MB  mozilla✓   -\n"
+            ),
+        }
+        mock_subprocess.side_effect = lambda cmd, **_: MagicMock(stdout=outputs[cmd[1]])
+
+        packages = SnapPackageRepository().get_installed_packages()
+
+        latest = {package["name"]: package["latest"] for package in packages}
+        assert latest == {"core22": "20240111", "firefox": "123.0-1"}
+        assert mock_subprocess.call_count == 2  # noqa: PLR2004
+
+    @patch("subprocess.run")
+    @patch("shutil.which")
+    def test_get_installed_packages_all_up_to_date(
+        self,
+        mock_which,
+        mock_subprocess,
+    ) -> None:
+        """Test that the 'All snaps up to date.' message is not parsed as a snap."""
+        mock_which.return_value = "/usr/bin/snap"
+        outputs = {"list": self.snap_list, "refresh": "All snaps up to date.\n"}
+        mock_subprocess.side_effect = lambda cmd, **_: MagicMock(stdout=outputs[cmd[1]])
+
+        packages = SnapPackageRepository().get_installed_packages()
+
+        latest = {package["name"]: package["latest"] for package in packages}
+        assert latest == {"core22": "20240111", "firefox": "122.0-2"}
 
 
 class TestPythonPackageRepository:
