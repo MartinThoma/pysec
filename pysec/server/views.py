@@ -1,6 +1,6 @@
 """Django views for pysec server."""
 
-from typing import TYPE_CHECKING, Union
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from django.contrib.auth.models import User
@@ -89,7 +89,7 @@ class ClientAPIView(APIView):
     authentication_classes = [ClientTokenAuthentication]
     permission_classes = [IsAuthenticated]
 
-    def get_client(self) -> Union[Client, "User"]:
+    def get_client(self) -> "Client | User":
         """Get the authenticated client."""
         # Access the client through the wrapper for client token auth
         # or return the user for other auth types

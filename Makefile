@@ -26,35 +26,35 @@ clean:
 
 # Test target
 test:
-	python -m pytest
+	uv run pytest
 
 # Coverage target - runs tests in two phases and generates HTML coverage report
 coverage:
 	@echo "Running coverage analysis..."
 	@echo "Phase 1: Running all tests except migrations (without --migrations flag)..."
-	python -m coverage run --source=pysec,pysec_django -m pytest --ignore=tests/test_migrations.py
+	uv run coverage run --source=pysec,pysec_django -m pytest --ignore=tests/test_migrations.py
 	@echo "Phase 2: Running migration test with --migrations flag..."
-	python -m coverage run --source=pysec,pysec_django --append -m pytest tests/test_migrations.py --migrations
+	uv run coverage run --source=pysec,pysec_django --append -m pytest tests/test_migrations.py --migrations
 	@echo "Generating HTML coverage report..."
-	python -m coverage html
+	uv run coverage html
 	@echo "Coverage report generated in htmlcov/index.html"
 	@echo "To view: open htmlcov/index.html in your browser"
 
 # Lint target
 lint:
-	python -m ruff check .
+	uv run ruff check .
 
 # Format target
 format:
-	python -m ruff format .
+	uv run ruff format .
 
 # Install target
 install:
-	pip install -e .
+	uv sync --no-dev
 
-# Development install target
+# Development install target (dev group is included by default)
 dev-install:
-	pip install -e .[dev]
+	uv sync
 
 tree:
 	tree -I venv
@@ -62,5 +62,5 @@ tree:
 # Generate OpenAPI specs
 specs:
 	@echo "Generating OpenAPI specs..."
-	python manage.py spectacular --color --file docs/specs.yml
+	uv run python manage.py spectacular --color --file docs/specs.yml
 	@echo "OpenAPI specs generated at docs/specs.yml"

@@ -1,7 +1,5 @@
 """Client CLI commands for pysec."""
 
-from typing import Optional
-
 import typer
 from rich import print
 from rich.console import Console
@@ -46,13 +44,13 @@ def configure_client(
 
 @client_app.command("run")
 def run_client(
-    server_url: Optional[str] = typer.Option(
+    server_url: str | None = typer.Option(
         None,
         "--server-url",
         "-s",
         help="URL of the pysec server (overrides config file)",
     ),
-    token: Optional[str] = typer.Option(
+    token: str | None = typer.Option(
         None,
         "--token",
         "-t",
@@ -111,7 +109,7 @@ def list_repositories() -> None:
 
 @client_app.command("list-packages")
 def list_packages(
-    repository: Optional[str] = typer.Option(
+    repository: str | None = typer.Option(
         None,
         "--repository",
         "-r",
@@ -123,7 +121,7 @@ def list_packages(
         "-l",
         help="Limit number of packages to display per repository",
     ),
-    search: Optional[str] = typer.Option(
+    search: str | None = typer.Option(
         None,
         "--search",
         "-s",

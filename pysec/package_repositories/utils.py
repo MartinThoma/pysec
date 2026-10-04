@@ -18,7 +18,7 @@ def get_available_repositories() -> list[PackageRepositoryChecker]:
     Get a list of available package repositories on the current system.
 
     Returns:
-        List[PackageRepositoryChecker]: List of available repository checkers.
+        list[PackageRepositoryChecker]: List of available repository checkers.
 
     """
     repositories = [

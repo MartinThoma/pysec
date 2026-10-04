@@ -35,7 +35,7 @@ class CveManager:
     def _download(self, year: int) -> None:
         url = f"https://nvd.nist.gov/feeds/json/cve/1.1/nvdcve-1.1-{year}.json.gz"
         gz_path = Path(self.config_dir) / f"nvdcve-1.1-{year}.json.gz"
-        urllib.request.urlretrieve(url, gz_path)  # noqa: S310
+        urllib.request.urlretrieve(url, gz_path)
         with (
             gzip.open(gz_path, "rb") as f_in,
             open(str(gz_path)[:-3], "wb") as f_out,  # noqa: PTH123

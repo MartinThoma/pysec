@@ -96,7 +96,7 @@ class PythonPackageRepository(PackageRepositoryChecker):
             package_name (str): Name of the package to query.
 
         Returns:
-            Optional[dict[str, str]]: Package information or None if not found.
+            dict[str, str] | None: Package information or None if not found.
 
         """
         if not self.is_available():

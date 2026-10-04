@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=61.0", "wheel"]
+requires = ["setuptools>=77.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -7,7 +7,8 @@ name = "pysec"
 version = "0.1.0"
 description = "FOSS Endpoint Security"
 readme = "README.md"
-license = { text = "MIT" }
+license = "MIT"
+license-files = ["LICENSE"]
 requires-python = ">=3.11"
 authors = [{ name = "Martin Thoma", email = "info@martin-thoma.de" }]
 maintainers = [{ name = "Martin Thoma", email = "info@martin-thoma.de" }]
@@ -27,7 +28,6 @@ classifiers = [
     "Framework :: Django :: 5.1",
     "Intended Audience :: Information Technology",
     "Intended Audience :: System Administrators",
-    "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
     "Operating System :: POSIX :: Linux",
     "Operating System :: MacOS",
@@ -35,6 +35,7 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Topic :: Internet :: WWW/HTTP :: Dynamic Content",
     "Topic :: Security",
     "Topic :: System :: Monitoring",
@@ -42,20 +43,29 @@ classifiers = [
     "Typing :: Typed"
 ]
 dependencies = [
-    "appdirs",
-    "cryptography",
-    "django>=5.1.0",
-    "django-extensions",
-    "django_rest_framework",
-    "drf-spectacular",
-    "pydantic",
-    "requests",
-    "rich",
-    "typer[all]",
+    "appdirs>=1.4.4",
+    "cryptography>=45.0",
+    "django>=5.1.4",
+    "django-extensions>=3.2.3",
+    "djangorestframework>=3.15.2",
+    "drf-spectacular>=0.28.0",
+    "pydantic>=2.10",
+    "requests>=2.32",
+    "rich>=14.0",
+    "typer>=0.16",
 ]
 
-[project.optional-dependencies]
-dev = ["pytest", "ruff", "pre-commit", "mypy", "pytest-coverage", "types-requests", "httpx", "pytest-django"]
+[dependency-groups]
+dev = [
+    "httpx>=0.28",
+    "mypy>=1.14",
+    "pre-commit>=4.0",
+    "pytest>=8.4",
+    "pytest-cov>=6.1",
+    "pytest-django>=4.9",
+    "ruff>=0.12",
+    "types-requests",
+]
 
 [project.urls]
 Homepage = "https://github.com/MartinThoma/pysec"
@@ -65,7 +75,7 @@ Documentation = "https://github.com/MartinThoma/pysec/tree/main/docs"
 "Source Code" = "https://github.com/MartinThoma/pysec"
 
 [project.scripts]
-pysec = "pysec.cli.main:main"
+pysec = "pysec.cli.main:app"
 
 [tool.setuptools.packages.find]
 where = ["."]
@@ -76,6 +86,7 @@ include = ["pysec*"]
     "templates/**/*"
 ]
 [tool.mypy]
+python_version = "3.11"
 ignore_missing_imports = true
 
 [tool.ruff]
@@ -89,6 +100,7 @@ ignore = [
     "ANN003", #  Missing type annotation for `**kwargs`
     "BLE001",  # Do not catch blind exception: `Exception`
     "COM812",  # Conflicts with 'ruff format'
+    "CPY001",  # Missing copyright notice at top of file
     "D101", #  Missing docstring in public class
     "D102",  # Missing docstring in public method
     "D104", #  Missing docstring in public package
@@ -110,7 +122,6 @@ ignore = [
     "S607",  # Starting a process with a partial executable path
     "TRY003",  # Avoid specifying long messages outside the exception class
     "TRY300", #  Consider moving this statement to an `else` block
-    "UP045",  # Introduced an error with typer
     "UP017",  # Seems broken
 ]
 
@@ -123,6 +134,7 @@ ignore = [
     "ARG001",  # Unused function argument clashes with pytest fixtures
     "ANN001",  # Missing type annotation for function argument - also bad for fixtures
     "PLR0913",  # Too many arguments in function definition
+    "PLR0917",  # Too many positional arguments - stacked @patch decorators
     ]
 "main.py" = [
     "B008",  # Do not perform function call `typer.Option` in argument defaults

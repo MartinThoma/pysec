@@ -11,7 +11,7 @@ This guide will help you set up the new server-client functionality in pysec.
 cd /path/to/pysec
 
 # Install the package with all dependencies
-pip install -e .
+uv sync --no-dev
 ```
 
 ### Step 2: Initialize the Database

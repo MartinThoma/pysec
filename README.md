@@ -61,14 +61,14 @@ cd pysec
 pipx install -e .
 
 # Or install with pip
-pip install -e .
+pip install .
 ```
 
 ### Development Installation
 
 ```bash
-# Install with development dependencies
-pip install -e .[dev]
+# Install with development dependencies (creates .venv, uses uv.lock)
+uv sync
 
 # Install pre-commit hooks
 pre-commit install

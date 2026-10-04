@@ -96,8 +96,8 @@ class TestAptPackageRepository:
     @patch("shutil.which")
     def test_is_available_with_apt_get(self, mock_which) -> None:
         """Test availability when only apt-get is present."""
-        mock_which.side_effect = (
-            lambda cmd: "/usr/bin/apt-get" if cmd == "apt-get" else None
+        mock_which.side_effect = lambda cmd: (
+            "/usr/bin/apt-get" if cmd == "apt-get" else None
         )
 
         repo = AptPackageRepository()
