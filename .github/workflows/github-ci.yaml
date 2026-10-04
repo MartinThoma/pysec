@@ -1,6 +1,3 @@
-# This workflow will install Python dependencies, run tests and lint with a variety of Python versions
-# For more information see: https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
-
 name: CI
 
 on:
@@ -18,137 +15,101 @@ on:
       - '**/*.rst'
   workflow_dispatch:
 
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  test_windows:
-    name: pytest on windows
-    runs-on: windows-latest
-    steps:
-    - name: Checkout Code
-      uses: actions/checkout@v4
-      with:
-        submodules: 'recursive'
-    - name: Setup Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: 3.13  # latest stable python
-        allow-prereleases: true
-    - name: Install uv
-      run: python -m pip install --upgrade uv
-    - name: Setup venv
-      run: |
-        uv venv
-        echo "$GITHUB_WORKSPACE/.venv/bin" >> $GITHUB_PATH
-        uv pip install .[dev]
-    - name: Test with pytest
-      run: |
-        .venv\Scripts\python.exe -m pytest tests --cov=pysec --cov-append -vv
-
-
   tests:
-    name: "pytest on ${{ matrix.python-version }}"
-    runs-on: ubuntu-22.04
+    name: "pytest on ${{ matrix.os }} / ${{ matrix.python-version }}"
+    runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
-        python-version: ["3.11", "3.12", "3.13"]
+        os: [ubuntu-latest]
+        python-version: ["3.11", "3.12", "3.13", "3.14"]
+        include:
+          - os: windows-latest
+            python-version: "3.14"
     steps:
-    - name: Checkout Code
-      uses: actions/checkout@v4
-      with:
-        submodules: 'recursive'
-    - name: Setup Python
-      uses: actions/setup-python@v5
-    - name: Install uv
-      run: python -m pip install --upgrade uv
-    - name: Setup venv
-      run: |
-        uv venv
-        echo "$GITHUB_WORKSPACE/.venv/bin" >> $GITHUB_PATH
-        uv pip install .[dev]
-    - name: Test with pytest
-      run: |
-        python -m pytest tests --cov=pysec --cov-append -vv
-      env:
-        COVERAGE_PROCESS_START: 'pyproject.toml'
-    - name: Rename coverage data file
-      run: mv .coverage ".coverage.$RANDOM"
-    - name: Upload coverage data
-      uses: actions/upload-artifact@v4
-      with:
-        name: coverage-data.${{ matrix.python-version }}-${{ matrix.use-crypto-lib }}
-        path: .coverage.*
-        if-no-files-found: ignore
-        include-hidden-files: true
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: ${{ matrix.python-version }}
+          enable-cache: true
+      - name: Install dependencies
+        run: uv sync --locked
+      - name: Test with pytest
+        run: uv run pytest tests --cov=pysec -vv
+      - name: Rename coverage data file
+        if: runner.os == 'Linux'
+        run: mv .coverage ".coverage.${{ matrix.python-version }}"
+      - name: Upload coverage data
+        if: runner.os == 'Linux'
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-data.${{ matrix.python-version }}
+          path: .coverage.*
+          if-no-files-found: ignore
+          include-hidden-files: true
 
   codestyle:
     name: Check code style issues
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     steps:
-    - name: Checkout Code
-      uses: actions/checkout@v4
-      with:
-        submodules: 'recursive'
-    - name: Setup Python
-      uses: actions/setup-python@v5
-    - name: Install uv
-      run: python -m pip install --upgrade uv
-    - name: Setup venv
-      run: |
-        uv venv
-        echo "$GITHUB_WORKSPACE/.venv/bin" >> $GITHUB_PATH
-        uv pip install .[dev]
-    - name: Test with ruff
-      run: |
-        echo `ruff --version`
-        ruff check .
-    - name: Test with mypy
-      run : mypy pysec
-    - name: Check with pre-commit
-      run: pre-commit run --all-files --show-diff-on-failure
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+      - name: Install dependencies
+        run: uv sync --locked
+      - name: Lint with ruff
+        run: |
+          uv run ruff --version
+          uv run ruff check .
+          uv run ruff format --check .
+      - name: Type-check with mypy
+        run: uv run mypy pysec
+      - name: Check with pre-commit
+        run: uv run pre-commit run --all-files --show-diff-on-failure
 
   package:
     name: Build & verify package
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: astral-sh/setup-uv@v6
         with:
-          python-version: ${{ env.PYTHON_LATEST }}
-
-      - run: python -m pip install flit
-      - run: flit build
+          python-version: "3.14"
+      - run: uv build
       - run: ls -l dist
-
       - name: Test installing package
-        run: python -m pip install .
-
-      - name: Test running installed package
         working-directory: /tmp
-        run: python -c "import pysec;print(pysec.__version__)"
+        run: |
+          uv venv
+          uv pip install "$GITHUB_WORKSPACE"/dist/*.whl
+          .venv/bin/python -c "import pysec; print(pysec.__version__)"
 
   coverage:
-    name: Combine & check coverage.
+    name: Combine & check coverage
     runs-on: ubuntu-latest
     needs: tests
-
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: astral-sh/setup-uv@v6
         with:
-          # Use latest Python, so it understands all syntax.
-          python-version: ${{ env.PYTHON_LATEST }}
-
-      - run: python -m pip install --upgrade coverage[toml]
-
+          python-version: "3.14"
       - uses: actions/download-artifact@v4
         with:
           pattern: coverage-data*
           merge-multiple: true
-
       - name: Combine coverage & create xml report
         run: |
-          python -m coverage combine
-          python -m coverage xml
+          uvx coverage combine
+          uvx coverage xml
       - name: Upload Coverage to Codecov
         uses: codecov/codecov-action@v5
         with:

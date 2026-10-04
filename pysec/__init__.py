@@ -1,8 +1,8 @@
 __version__ = "0.1.0"
-from enum import Enum
+from enum import StrEnum
 
 
-class SeverityLevel(str, Enum):
+class SeverityLevel(StrEnum):
     LOW = "LOW"
     MEDIUM = "MEDIUM"
     HIGH = "HIGH"

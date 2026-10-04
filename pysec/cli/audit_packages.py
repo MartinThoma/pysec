@@ -11,7 +11,7 @@ from pysec.package_repositories import get_all_installed_packages
 def get_keep_severity(min_severity: SeverityLevel) -> list[str]:
     """Return a list of severity levels to keep based on the minimum severity."""
     keep_severity = []
-    if min_severity in ["LOW"]:
+    if min_severity == "LOW":
         keep_severity.append("LOW")
     if min_severity in ["LOW", "MEDIUM"]:
         keep_severity.append("MEDIUM")
